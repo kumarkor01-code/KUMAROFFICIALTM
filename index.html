@@ -3,414 +3,608 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supermarket Empire Tycoon</title>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>Supermarket Simulator Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;900&display=swap" rel="stylesheet">
     <style>
-        /* ==========================================================================
-           1. CSS STYLING & ANIMATIONS
-           ========================================================================== */
+        /* ==========================================================
+           1. CSS RESET & VARIABLES
+           ========================================================== */
         :root {
-            --bg-dark: #0f172a; --panel-bg: #1e293b; --text-main: #f8fafc;
-            --accent: #3b82f6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --bg-body: #0b0f19; --panel-bg: #151c2c; --floor-bg: #e2e8f0;
+            --text-light: #f8fafc; --text-muted: #94a3b8;
+            --primary: #3b82f6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --shelf-color: #334155; --cashier-color: #4338ca; --door-color: #059669;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', sans-serif; user-select: none; }
-        body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
-        
-        /* Layout Grid */
-        #game-container { display: flex; width: 100%; height: 100%; }
-        #left-panel { width: 250px; background: var(--panel-bg); padding: 20px; border-right: 2px solid #334155; display: flex; flex-direction: column; gap: 15px; }
-        #main-area { flex-grow: 1; padding: 20px; position: relative; overflow-y: auto; background: radial-gradient(circle at top, #1e293b, #0f172a); }
-        #right-panel { width: 300px; background: var(--panel-bg); padding: 20px; border-left: 2px solid #334155; display: flex; flex-direction: column; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; user-select: none; }
+        body { background: var(--bg-body); color: var(--text-light); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* Typography & UI Elements */
-        h1, h2, h3 { text-transform: uppercase; letter-spacing: 1px; }
-        .title { font-size: 24px; color: var(--accent); font-weight: 900; text-align: center; margin-bottom: 20px; text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
-        .stat-box { background: #0f172a; padding: 15px; border-radius: 12px; border: 1px solid #334155; margin-bottom: 10px; text-align: center; }
-        .stat-value { font-size: 28px; font-weight: 900; color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
+        /* ==========================================================
+           2. TOP NAVIGATION BAR
+           ========================================================== */
+        #topbar { background: var(--panel-bg); height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 2px solid #1e293b; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 10; }
+        .logo { font-size: 22px; font-weight: 900; color: var(--primary); text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+        .logo span { color: var(--warning); }
+        .stats-container { display: flex; gap: 20px; align-items: center; }
+        .stat-badge { background: #0f172a; border: 1px solid #1e293b; padding: 5px 15px; border-radius: 20px; font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+        .money { color: var(--success); }
+        .reputation { color: var(--warning); }
+        .time-display { font-size: 20px; font-weight: 900; color: #fff; background: #000; padding: 5px 15px; border-radius: 8px; border: 2px solid var(--primary); }
+
+        /* ==========================================================
+           3. MAIN LAYOUT
+           ========================================================== */
+        #main-content { display: flex; flex: 1; overflow: hidden; }
+        
+        /* Left Toolbar */
+        #toolbar { width: 250px; background: var(--panel-bg); border-right: 2px solid #1e293b; padding: 15px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+        .tool-title { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 900; letter-spacing: 1px; margin-top: 10px; border-bottom: 1px solid #1e293b; padding-bottom: 5px; }
         
         /* Buttons */
-        .btn { padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; width: 100%; display: flex; justify-content: space-between; align-items: center; }
-        .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
-        .btn:active { transform: translateY(1px); }
-        .btn-blue { background: var(--accent); color: white; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
-        .btn-green { background: var(--success); color: white; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; }
+        .btn:hover { filter: brightness(1.2); transform: translateY(-2px); }
+        .btn:active { transform: translateY(0); }
+        .btn-blue { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(59,130,246,0.3); }
+        .btn-green { background: var(--success); color: white; box-shadow: 0 4px 15px rgba(16,185,129,0.3); }
         .btn-orange { background: var(--warning); color: #000; }
-        .btn:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; box-shadow: none; transform: none; }
-
-        /* Shelves Grid */
-        #store-floor { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }
-        .shelf { background: rgba(30, 41, 59, 0.8); border: 2px solid #334155; border-radius: 15px; padding: 15px; text-align: center; position: relative; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
-        .shelf:hover { border-color: var(--accent); background: rgba(59, 130, 246, 0.1); }
-        .shelf-title { font-size: 16px; font-weight: bold; color: #cbd5e1; margin-bottom: 10px; border-bottom: 1px solid #334155; padding-bottom: 5px;}
-        .stock-display { font-size: 35px; letter-spacing: 5px; margin: 15px 0; min-height: 50px; display: flex; justify-content: center; align-items: center; flex-wrap: wrap;}
-        .progress-bar { width: 100%; height: 8px; background: #334155; border-radius: 5px; overflow: hidden; margin-bottom: 15px; }
-        .progress-fill { height: 100%; background: var(--success); width: 0%; transition: width 0.3s; }
-
-        /* Assign Product Modal */
-        .product-selector { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
-        .prod-btn { background: #334155; border: 1px solid #475569; color: white; padding: 8px; border-radius: 5px; cursor: pointer; text-align: left; }
-        .prod-btn:hover { background: #475569; }
-
-        /* Customer Log */
-        #log-container { flex-grow: 1; background: #0f172a; border-radius: 10px; border: 1px solid #334155; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .log-entry { background: #1e293b; padding: 8px 12px; border-radius: 6px; border-left: 4px solid var(--success); font-size: 13px; animation: slideIn 0.3s ease-out; }
+        .btn-dark { background: #1e293b; color: white; border: 1px solid #334155; }
         
-        /* Start Overlay */
-        #start-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+        /* ==========================================================
+           4. GAME FLOOR (THE 2D WORLD)
+           ========================================================== */
+        #game-view { flex: 1; background: #0f172a; position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        #store-floor { width: 800px; height: 600px; background: var(--floor-bg); position: relative; border: 10px solid #334155; border-radius: 10px; box-shadow: inset 0 0 50px rgba(0,0,0,0.2), 0 0 30px rgba(0,0,0,0.8); background-image: linear-gradient(#cbd5e1 1px, transparent 1px), linear-gradient(90deg, #cbd5e1 1px, transparent 1px); background-size: 40px 40px; }
         
-        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
-        .pop-anim { animation: pop 0.3s ease-out; }
+        /* Entities on Floor */
+        .entity { position: absolute; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-weight: 700; font-size: 12px; border-radius: 8px; transition: 0.3s linear; }
+        
+        .door { width: 80px; height: 20px; background: var(--door-color); bottom: -10px; left: 360px; z-index: 5; box-shadow: 0 0 15px var(--door-color); color: white; border-radius: 0; }
+        
+        .shelf { width: 80px; height: 40px; background: var(--shelf-color); border: 2px solid #1e293b; box-shadow: 0 5px 10px rgba(0,0,0,0.3); color: white; cursor: pointer; }
+        .shelf:hover { border-color: var(--warning); }
+        .shelf-progress { width: 90%; height: 6px; background: #000; margin-top: 5px; border-radius: 3px; overflow: hidden; }
+        .shelf-fill { height: 100%; background: var(--success); width: 0%; }
+        
+        .cash-register { width: 60px; height: 60px; background: var(--cashier-color); border: 2px solid #312e81; color: white; border-radius: 50%; box-shadow: 0 5px 15px rgba(67, 56, 202, 0.5); }
+        
+        .customer { width: 30px; height: 30px; background: #fff; border-radius: 50%; border: 2px solid #000; font-size: 16px; display: flex; justify-content: center; align-items: center; z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.5s linear, top 0.5s linear, left 0.5s linear; }
+        .staff { width: 30px; height: 30px; background: var(--warning); border-radius: 50%; border: 2px solid #000; font-size: 16px; display: flex; justify-content: center; align-items: center; z-index: 9; }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        /* ==========================================================
+           5. MODALS & UI OVERLAYS
+           ========================================================== */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal { background: var(--panel-bg); width: 400px; border-radius: 15px; border: 1px solid #334155; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: zoomIn 0.3s ease; }
+        .modal-header { font-size: 20px; font-weight: 900; color: white; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 10px; display: flex; justify-content: space-between; }
+        .close-btn { background: none; border: none; color: var(--danger); font-size: 20px; cursor: pointer; font-weight: 900; }
+        
+        .item-list { display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto; padding-right: 5px; }
+        .item-card { background: #0f172a; border: 1px solid #334155; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Toast Notifications */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 200; pointer-events: none; }
+        .toast { background: rgba(15, 23, 42, 0.9); border-left: 4px solid var(--success); color: white; padding: 12px 20px; border-radius: 5px; font-size: 13px; font-weight: 500; box-shadow: 0 5px 15px rgba(0,0,0,0.3); animation: slideLeft 0.4s ease forwards; }
+
+        @keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes slideLeft { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
+        /* Start Screen */
+        #start-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     </style>
 </head>
 <body>
 
-    <!-- Start Overlay (To bypass browser audio block) -->
-    <div id="start-overlay">
-        <h1 style="font-size: 40px; color: var(--accent); margin-bottom: 20px; text-shadow: 0 0 20px var(--accent);">🏪 SUPERMARKET EMPIRE</h1>
-        <p style="margin-bottom: 30px; color: #cbd5e1;">Manage stock, hire staff, and become a millionaire!</p>
-        <button class="btn btn-green" style="width: 250px; font-size: 18px; padding: 15px; justify-content: center;" onclick="startGame()">▶️ START GAME</button>
+    <!-- START SCREEN -->
+    <div id="start-screen">
+        <h1 style="font-size: 50px; color: var(--primary); text-shadow: 0 0 20px var(--primary);">SUPERMARKET <span>PRO</span></h1>
+        <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 18px;">The Ultimate 2D Simulation Experience</p>
+        <button class="btn btn-green" style="width: 200px; font-size: 18px; padding: 15px; justify-content: center;" onclick="initGame()">▶ PLAY NOW</button>
     </div>
 
-    <!-- Hidden Audio for Background Music -->
-    <audio id="bgMusic" loop>
-        <!-- Using a reliable public domain ambient/game loop -->
-        <source src="https://vgmsite.com/soundtracks/wii-shop-channel-music/qjrtzpqe/01%20Wii%20Shop%20Channel.mp3" type="audio/mpeg">
-    </audio>
+    <!-- TOP BAR -->
+    <div id="topbar">
+        <div class="logo">SUPER<span>MARKET</span></div>
+        <div class="stats-container">
+            <div class="stat-badge money">💵 $<span id="ui-money">1000</span></div>
+            <div class="stat-badge reputation">⭐ <span id="ui-rep">0</span></div>
+            <div class="time-display" id="ui-time">08:00</div>
+        </div>
+    </div>
 
-    <!-- UI STRUCTURE -->
-    <div id="game-container">
-        
-        <!-- Left Panel: Stats & Upgrades -->
-        <div id="left-panel">
-            <div class="title">My Store</div>
-            
-            <div class="stat-box">
-                <div style="font-size: 12px; color: #94a3b8;">STORE BALANCE</div>
-                <div class="stat-value" id="coin-display">🪙 100</div>
+    <!-- MAIN GAME AREA -->
+    <div id="main-content">
+        <!-- LEFT TOOLBAR -->
+        <div id="toolbar">
+            <div class="tool-title">Storage / Godown</div>
+            <div style="background:#0f172a; padding:10px; border-radius:8px; border:1px solid #334155; font-size:12px;">
+                <span style="color:var(--text-muted);">Stock in Backroom:</span><br>
+                🍎 <span id="st-apple">0</span> | 🍞 <span id="st-bread">0</span> | 🥛 <span id="st-milk">0</span>
             </div>
-            
-            <div class="stat-box" style="padding: 10px;">
-                <div style="font-size: 12px; color: #94a3b8;">STORE LEVEL</div>
-                <div style="font-size: 20px; font-weight: bold; color: var(--accent);" id="level-display">Level 1</div>
-            </div>
+            <button class="btn btn-blue" onclick="openModal('wholesale-modal')">🚚 Buy Wholesale</button>
 
-            <h3 style="font-size: 14px; margin-top: 10px; border-bottom: 1px solid #334155; padding-bottom: 5px;">🏗️ BUILD & UPGRADE</h3>
-            <button class="btn btn-blue" id="btn-buy-shelf" onclick="buyShelf()">
-                <span>➕ Buy Shelf</span> <span id="shelf-cost">50 🪙</span>
-            </button>
+            <div class="tool-title">Build & Expand</div>
+            <button class="btn btn-dark" onclick="buyShelf()">➕ Buy Shelf ($<span id="cost-shelf">200</span>)</button>
+            <button class="btn btn-dark" onclick="buyRegister()">💻 Buy Cashier ($<span id="cost-register">500</span>)</button>
 
-            <h3 style="font-size: 14px; margin-top: 10px; border-bottom: 1px solid #334155; padding-bottom: 5px;">👨‍💼 STAFF</h3>
-            <button class="btn btn-orange" id="btn-hire-staff" onclick="hireStaff()">
-                <span>👷 Hire Manager</span> <span id="staff-cost">300 🪙</span>
-            </button>
-            <p style="font-size: 11px; color: #94a3b8; text-align: center;">Managers automatically restock empty shelves.</p>
+            <div class="tool-title">Staff Management</div>
+            <button class="btn btn-orange" onclick="hireStaff('restocker')">👷 Hire Restocker ($300)</button>
+            <button class="btn btn-orange" onclick="hireStaff('cashier')">🧑‍💼 Hire Cashier ($400)</button>
 
-            <div style="margin-top: auto;">
-                <button class="btn" style="background:#334155; color:white; justify-content:center;" onclick="toggleBGM()">🎵 Toggle Music</button>
-            </div>
+            <div class="tool-title">System</div>
+            <button class="btn btn-green" style="justify-content:center;" onclick="toggleStoreStatus()" id="btn-store-toggle">Open Store</button>
         </div>
 
-        <!-- Main Area: The Store Floor -->
-        <div id="main-area">
-            <h2>🛒 STORE FLOOR</h2>
+        <!-- 2D STORE FLOOR -->
+        <div id="game-view">
             <div id="store-floor">
-                <!-- Shelves will be injected here via JavaScript -->
+                <div class="entity door">DOOR</div>
+                <!-- Shelves, Registers, and Customers will be injected here -->
             </div>
         </div>
-
-        <!-- Right Panel: Logs & Customers -->
-        <div id="right-panel">
-            <h3 style="font-size: 14px; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 5px;">🚶 LIVE CUSTOMERS</h3>
-            <div id="log-container">
-                <div style="color: #64748b; font-size: 12px; text-align: center; margin-top: 20px;">Waiting for customers...</div>
-            </div>
-        </div>
-
     </div>
 
-    <!-- ==========================================================================
-         JAVASCRIPT GAME ENGINE
-         ========================================================================== -->
+    <!-- TOAST NOTIFICATIONS -->
+    <div id="toast-container"></div>
+
+    <!-- WHOLESALE MODAL -->
+    <div class="modal-overlay" id="wholesale-modal">
+        <div class="modal">
+            <div class="modal-header">
+                Wholesale Market <button class="close-btn" onclick="closeModal('wholesale-modal')">✖</button>
+            </div>
+            <div class="item-list">
+                <div class="item-card">
+                    <div><strong style="font-size:16px;">🍎 Apples Box</strong><br><span style="font-size:12px; color:var(--text-muted);">Contains 20 units</span></div>
+                    <button class="btn btn-blue" style="width:auto; padding:8px 15px;" onclick="buyWholesale('apple', 20, 40)">Buy $40</button>
+                </div>
+                <div class="item-card">
+                    <div><strong style="font-size:16px;">🍞 Bread Crate</strong><br><span style="font-size:12px; color:var(--text-muted);">Contains 15 units</span></div>
+                    <button class="btn btn-blue" style="width:auto; padding:8px 15px;" onclick="buyWholesale('bread', 15, 60)">Buy $60</button>
+                </div>
+                <div class="item-card">
+                    <div><strong style="font-size:16px;">🥛 Milk Cartons</strong><br><span style="font-size:12px; color:var(--text-muted);">Contains 10 units</span></div>
+                    <button class="btn btn-blue" style="width:auto; padding:8px 15px;" onclick="buyWholesale('milk', 10, 80)">Buy $80</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHELF CONFIG MODAL -->
+    <div class="modal-overlay" id="shelf-modal">
+        <div class="modal">
+            <div class="modal-header">
+                Configure Shelf <button class="close-btn" onclick="closeModal('shelf-modal')">✖</button>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Select which product to sell here:</p>
+            <div class="item-list">
+                <button class="btn btn-dark" onclick="setShelfProduct('apple')">🍎 Sell Apples ($5/ea)</button>
+                <button class="btn btn-dark" onclick="setShelfProduct('bread')">🍞 Sell Bread ($10/ea)</button>
+                <button class="btn btn-dark" onclick="setShelfProduct('milk')">🥛 Sell Milk ($15/ea)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================
+         JAVASCRIPT GAME ENGINE (700+ Lines Logic Condensed)
+         ========================================================== -->
     <script>
-        // --- Game State & Data ---
+        /* -------------------------------------------------------------
+           1. GAME STATE & DATABASE
+           ------------------------------------------------------------- */
         let game = {
-            coins: 100,
-            level: 1,
-            shelfCost: 50,
-            staffCost: 300,
-            hasManager: false,
-            bgmPlaying: false
+            money: 1000,
+            reputation: 10,
+            time: 8 * 60, // Minutes since midnight (Starts at 8:00)
+            isOpen: false,
+            day: 1,
+            prices: { shelf: 200, register: 500, restocker: 300, cashier: 400 }
         };
 
-        let shelves = []; // Array to hold shelf objects
-
-        // Product Catalog
+        let storage = { apple: 0, bread: 0, milk: 0 };
+        
         const PRODUCTS = {
-            apple:  { id: 'apple',  name: 'Apples',   emoji: '🍎', buyCost: 2,  sellPrice: 5,   maxStock: 5 },
-            bread:  { id: 'bread',  name: 'Bread',    emoji: '🍞', buyCost: 5,  sellPrice: 12,  maxStock: 4 },
-            milk:   { id: 'milk',   name: 'Milk',     emoji: '🥛', buyCost: 8,  sellPrice: 20,  maxStock: 3 },
-            laptop: { id: 'laptop', name: 'Laptops',  emoji: '💻', buyCost: 50, sellPrice: 150, maxStock: 1 }
+            apple: { name: "Apple", emoji: "🍎", sellPrice: 5, maxStock: 10 },
+            bread: { name: "Bread", emoji: "🍞", sellPrice: 10, maxStock: 8 },
+            milk:  { name: "Milk",  emoji: "🥛", sellPrice: 15, maxStock: 6 }
         };
 
-        // --- Audio System (No external links for SFX, uses AudioContext) ---
+        const EMOJIS = ['👨', '👩', '👱‍♂️', '👱‍♀️', '👴', '👵', '🧑‍.'];
+
+        // Entities Arrays
+        let shelves = [];
+        let registers = [];
+        let customers = [];
+        let staffList = [];
+
+        // DOM Elements
+        const floorEl = document.getElementById('store-floor');
+        let selectedShelfId = null;
+
+        /* -------------------------------------------------------------
+           2. CORE ENGINE LOOPS
+           ------------------------------------------------------------- */
+        let gameLoop, timeLoop, spawnLoop;
+        
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx;
 
-        function initAudio() {
-            if (!audioCtx) audioCtx = new AudioContext();
+        function initGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            audioCtx = new AudioContext();
+            
+            // Initial Setup
+            createShelf(100, 100);
+            createRegister(600, 450);
+            updateUI();
+
+            // Start Loops
+            gameLoop = setInterval(updateEntities, 100);  // 10 FPS Physics/Logic
+            timeLoop = setInterval(updateTime, 1000);     // 1 Game Minute = 1 Real Second
         }
 
-        function playSFX(type) {
-            if (!audioCtx) return;
+        // --- Audio System ---
+        function playSound(type) {
+            if(!audioCtx) return;
             try {
                 let osc = audioCtx.createOscillator();
                 let gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
+                osc.connect(gain); gain.connect(audioCtx.destination);
                 
                 if (type === 'cash') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(800, audioCtx.currentTime);
                     osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
-                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
                     osc.start(); osc.stop(audioCtx.currentTime + 0.2);
-                } 
-                else if (type === 'buy') {
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-                    osc.frequency.setValueAtTime(400, audioCtx.currentTime + 0.1);
+                } else if (type === 'buy') {
+                    osc.type = 'square'; osc.frequency.setValueAtTime(400, audioCtx.currentTime);
                     gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-                    osc.start(); osc.stop(audioCtx.currentTime + 0.2);
-                }
-                else if (type === 'error') {
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+                } else if (type === 'error') {
+                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime);
                     gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                    osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.2);
                 }
             } catch(e) {}
         }
 
-        function toggleBGM() {
-            let bgm = document.getElementById('bgMusic');
-            bgm.volume = 0.2; // Keep it low so it's pleasant
-            if (game.bgmPlaying) { bgm.pause(); game.bgmPlaying = false; } 
-            else { bgm.play().catch(e=>{}); game.bgmPlaying = true; }
-        }
-
-        // --- Core Game Functions ---
-        function startGame() {
-            document.getElementById('start-overlay').style.display = 'none';
-            initAudio();
-            toggleBGM(); // Start music
-            // Give 1 starting shelf for free
-            shelves.push({ id: 0, product: 'apple', stock: 5 });
-            renderShelves();
-            updateUI();
-            startGameLoops();
-            addLog("Game Started! Customers are arriving.");
-        }
-
-        function updateUI() {
-            let coinEl = document.getElementById('coin-display');
-            coinEl.innerText = `🪙 ${game.coins}`;
-            coinEl.classList.remove('pop-anim');
-            void coinEl.offsetWidth; // Trigger reflow
-            coinEl.classList.add('pop-anim');
-
-            document.getElementById('level-display').innerText = `Level ${game.level}`;
-            document.getElementById('shelf-cost').innerText = `${game.shelfCost} 🪙`;
-            document.getElementById('btn-buy-shelf').disabled = game.coins < game.shelfCost;
+        /* -------------------------------------------------------------
+           3. ENTITY CREATION (BUILDING THE STORE)
+           ------------------------------------------------------------- */
+        function createShelf(x, y) {
+            let id = shelves.length;
+            let el = document.createElement('div');
+            el.className = 'entity shelf';
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            el.innerHTML = `<div class="shelf-name">Empty</div><div class="shelf-progress"><div class="shelf-fill"></div></div>`;
+            el.onclick = () => { selectedShelfId = id; openModal('shelf-modal'); };
             
-            let staffBtn = document.getElementById('btn-hire-staff');
-            if (game.hasManager) {
-                staffBtn.innerHTML = `<span>👷 Manager Hired</span>`;
-                staffBtn.disabled = true;
-                staffBtn.classList.replace('btn-orange', 'btn-green');
-            } else {
-                staffBtn.disabled = game.coins < game.staffCost;
-            }
-
-            // Level up logic
-            if (game.coins >= 1000 && game.level === 1) { game.level = 2; addLog("⭐ LEVEL UP! Store Level 2 reached!"); }
-            if (game.coins >= 5000 && game.level === 2) { game.level = 3; addLog("⭐ LEVEL UP! Store Level 3 reached!"); }
+            floorEl.appendChild(el);
+            shelves.push({ id: id, x: x, y: y, product: null, stock: 0, el: el });
         }
 
-        function addLog(msg) {
-            let logCont = document.getElementById('log-container');
-            if (logCont.innerHTML.includes("Waiting for customers")) logCont.innerHTML = "";
-            let entry = document.createElement('div');
-            entry.className = 'log-entry';
-            entry.innerText = msg;
-            logCont.prepend(entry);
-            if (logCont.children.length > 20) logCont.removeChild(logCont.lastChild); // Keep log tidy
+        function createRegister(x, y) {
+            let id = registers.length;
+            let el = document.createElement('div');
+            el.className = 'entity cash-register';
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            el.innerHTML = `💻`;
+            
+            floorEl.appendChild(el);
+            registers.push({ id: id, x: x, y: y, queue: [], isManned: false, el: el });
         }
 
-        // --- Store Management ---
         function buyShelf() {
-            if (game.coins >= game.shelfCost) {
-                game.coins -= game.shelfCost;
-                game.shelfCost = Math.floor(game.shelfCost * 1.5); // Next shelf is more expensive
-                shelves.push({ id: shelves.length, product: null, stock: 0 });
-                playSFX('buy');
-                renderShelves();
+            if (game.money >= game.prices.shelf) {
+                game.money -= game.prices.shelf;
+                game.prices.shelf += 50;
+                // Simple auto-placement grid logic
+                let cols = Math.floor(600 / 100);
+                let cx = (shelves.length % cols) * 100 + 50;
+                let cy = Math.floor(shelves.length / cols) * 80 + 50;
+                
+                createShelf(cx, cy);
+                playSound('buy');
                 updateUI();
-                addLog("🏗️ Built a new shelf!");
-            } else { playSFX('error'); }
+                showToast("New Shelf Built!");
+            } else playSound('error');
         }
 
-        function hireStaff() {
-            if (game.coins >= game.staffCost && !game.hasManager) {
-                game.coins -= game.staffCost;
-                game.hasManager = true;
-                playSFX('buy');
+        function buyRegister() {
+            if (game.money >= game.prices.register) {
+                game.money -= game.prices.register;
+                game.prices.register += 200;
+                let ry = 450;
+                let rx = 600 - (registers.length * 80);
+                createRegister(rx, ry);
+                playSound('buy');
                 updateUI();
-                addLog("👷 Hired a Manager! Shelves will auto-restock.");
-            } else { playSFX('error'); }
+                showToast("New Cash Register Added!");
+            } else playSound('error');
         }
 
-        function assignProduct(shelfIndex, prodId) {
-            let p = PRODUCTS[prodId];
-            shelves[shelfIndex].product = prodId;
-            shelves[shelfIndex].stock = 0; // Starts empty, needs restock
-            playSFX('buy');
-            renderShelves();
-        }
-
-        function restockShelf(shelfIndex) {
-            let shelf = shelves[shelfIndex];
-            if (!shelf.product) return;
-            
-            let p = PRODUCTS[shelf.product];
-            let missingStock = p.maxStock - shelf.stock;
-            let cost = missingStock * p.buyCost;
-
-            if (missingStock === 0) return; // Already full
-
-            if (game.coins >= cost) {
-                game.coins -= cost;
-                shelf.stock = p.maxStock;
-                playSFX('buy');
-                renderShelves();
-                updateUI();
-            } else {
-                playSFX('error');
-                addLog("❌ Not enough coins to restock " + p.name);
+        /* -------------------------------------------------------------
+           4. INVENTORY & WHOLESALE
+           ------------------------------------------------------------- */
+        function setShelfProduct(prodId) {
+            if (selectedShelfId !== null) {
+                let s = shelves[selectedShelfId];
+                s.product = prodId;
+                s.stock = 0;
+                s.el.querySelector('.shelf-name').innerText = PRODUCTS[prodId].emoji;
+                closeModal('shelf-modal');
+                playSound('buy');
+                updateShelvesVisuals();
             }
         }
 
-        // --- Rendering ---
-        function renderShelves() {
-            let floor = document.getElementById('store-floor');
-            floor.innerHTML = '';
+        function buyWholesale(prodId, amount, cost) {
+            if (game.money >= cost) {
+                game.money -= cost;
+                storage[prodId] += amount;
+                playSound('buy');
+                updateUI();
+                showToast(`🚚 Delivery Arrived: ${amount} ${PRODUCTS[prodId].name}`);
+            } else { playSound('error'); showToast("Not enough money!", "error"); }
+        }
 
-            shelves.forEach((shelf, index) => {
-                let div = document.createElement('div');
-                div.className = 'shelf';
-
-                if (!shelf.product) {
-                    // Empty shelf needing assignment
-                    div.innerHTML = `
-                        <div class="shelf-title">Empty Shelf</div>
-                        <div style="font-size:12px; margin-bottom:10px; color:#94a3b8;">Select a product to sell:</div>
-                        <div class="product-selector">
-                            <button class="prod-btn" onclick="assignProduct(${index}, 'apple')">🍎 Apples (Buy: 2, Sell: 5)</button>
-                            <button class="prod-btn" onclick="assignProduct(${index}, 'bread')">🍞 Bread (Buy: 5, Sell: 12)</button>
-                            <button class="prod-btn" onclick="assignProduct(${index}, 'milk')">🥛 Milk (Buy: 8, Sell: 20)</button>
-                            ${game.level >= 2 ? `<button class="prod-btn" onclick="assignProduct(${index}, 'laptop')">💻 Laptop (Buy: 50, Sell: 150)</button>` : '<button class="prod-btn" disabled>💻 Laptop (Unlocks Lv 2)</button>'}
-                        </div>
-                    `;
-                } else {
-                    // Active shelf
-                    let p = PRODUCTS[shelf.product];
-                    let fillPercentage = (shelf.stock / p.maxStock) * 100;
-                    
-                    let emojis = p.emoji.repeat(shelf.stock);
-                    let emptySlots = "❌".repeat(p.maxStock - shelf.stock);
-
-                    div.innerHTML = `
-                        <div class="shelf-title">${p.name}</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${fillPercentage}%; background: ${fillPercentage > 20 ? 'var(--success)' : 'var(--danger)'}"></div>
-                        </div>
-                        <div class="stock-display">${emojis}${emptySlots}</div>
-                        <button class="btn btn-green" onclick="restockShelf(${index})" ${shelf.stock === p.maxStock ? 'disabled' : ''}>
-                            📦 Restock (-${(p.maxStock - shelf.stock) * p.buyCost} 🪙)
-                        </button>
-                    `;
+        function updateShelvesVisuals() {
+            shelves.forEach(s => {
+                if (s.product) {
+                    let max = PRODUCTS[s.product].maxStock;
+                    let pct = (s.stock / max) * 100;
+                    let fill = s.el.querySelector('.shelf-fill');
+                    fill.style.width = pct + '%';
+                    fill.style.background = pct > 20 ? 'var(--success)' : 'var(--danger)';
                 }
-                floor.appendChild(div);
             });
         }
 
-        // --- Game Loops (Automated Mechanics) ---
-        function startGameLoops() {
-            
-            // 1. Customer Buying Loop (Runs every 2.5 seconds)
-            setInterval(() => {
-                let soldAny = false;
-                
-                // Shuffle shelves so customers don't just buy from shelf 1
-                let activeShelves = shelves.map((s, i) => ({...s, index: i})).filter(s => s.product && s.stock > 0);
-                activeShelves.sort(() => Math.random() - 0.5);
-
-                if (activeShelves.length > 0) {
-                    // Randomly pick 1 or 2 shelves to buy from
-                    let buys = Math.floor(Math.random() * 2) + 1; 
-                    for(let i=0; i<Math.min(buys, activeShelves.length); i++) {
-                        let targetShelf = activeShelves[i];
-                        let realShelf = shelves[targetShelf.index];
-                        let p = PRODUCTS[realShelf.product];
-                        
-                        realShelf.stock--;
-                        game.coins += p.sellPrice;
-                        soldAny = true;
-                        addLog(`🚶 Customer bought ${p.emoji} ${p.name} (+${p.sellPrice} 🪙)`);
-                    }
-                }
-
-                if (soldAny) {
-                    playSFX('cash');
-                    renderShelves();
-                    updateUI();
-                }
-            }, 2500);
-
-            // 2. Manager Restocking Loop (Runs every 4 seconds)
-            setInterval(() => {
-                if (game.hasManager) {
-                    let managerWorked = false;
-                    shelves.forEach((shelf, index) => {
-                        if (shelf.product && shelf.stock < PRODUCTS[shelf.product].maxStock) {
-                            // Only restock if we have enough money
-                            let p = PRODUCTS[shelf.product];
-                            let missing = p.maxStock - shelf.stock;
-                            let cost = missing * p.buyCost;
-                            
-                            if (game.coins >= cost) {
-                                game.coins -= cost;
-                                shelf.stock = p.maxStock;
-                                managerWorked = true;
-                            }
-                        }
-                    });
-                    
-                    if(managerWorked) {
-                        addLog("👷 Manager auto-restocked empty shelves.");
-                        renderShelves();
-                        updateUI();
-                    }
-                }
-            }, 4000);
+        /* -------------------------------------------------------------
+           5. CUSTOMER AI & PATHFINDING
+           ------------------------------------------------------------- */
+        function toggleStoreStatus() {
+            game.isOpen = !game.isOpen;
+            let btn = document.getElementById('btn-store-toggle');
+            if (game.isOpen) {
+                btn.innerText = "Close Store";
+                btn.classList.replace('btn-green', 'btn-orange');
+                spawnLoop = setInterval(spawnCustomer, 3000 - (game.reputation * 50)); // More rep = faster spawn
+                showToast("Store is now OPEN!");
+            } else {
+                btn.innerText = "Open Store";
+                btn.classList.replace('btn-orange', 'btn-green');
+                clearInterval(spawnLoop);
+                showToast("Store is now CLOSED!");
+            }
         }
 
+        function spawnCustomer() {
+            if (customers.length >= 15) return; // Max capacity
+            
+            let id = Math.random().toString(36).substr(2, 9);
+            let el = document.createElement('div');
+            el.className = 'entity customer';
+            el.innerText = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+            
+            // Spawn at Door
+            let sx = 400, sy = 600;
+            el.style.left = sx + 'px';
+            el.style.top = sy + 'px';
+            floorEl.appendChild(el);
+
+            let customer = {
+                id: id, el: el, x: sx, y: sy, state: 'entering',
+                target: null, cart: 0, shoppingListSize: Math.floor(Math.random() * 3) + 1
+            };
+            customers.push(customer);
+        }
+
+        function moveEntity(ent, tx, ty, speedFactor = 1) {
+            // Simplified movement utilizing CSS transitions
+            ent.x = tx; ent.y = ty;
+            ent.el.style.left = tx + 'px';
+            ent.el.style.top = ty + 'px';
+        }
+
+        function updateEntities() {
+            // 1. Customer AI
+            customers.forEach((c, index) => {
+                if (c.state === 'entering') {
+                    // Find a shelf with stock
+                    let validShelves = shelves.filter(s => s.product && s.stock > 0);
+                    if (validShelves.length > 0 && c.shoppingListSize > 0) {
+                        c.target = validShelves[Math.floor(Math.random() * validShelves.length)];
+                        c.state = 'shopping';
+                        moveEntity(c, c.target.x, c.target.y + 40); // Move below shelf
+                    } else {
+                        // No items or list empty, go to cashier
+                        c.state = 'seeking_cashier';
+                    }
+                }
+                else if (c.state === 'shopping') {
+                    // Logic handled in setTimeouts internally, simulate wait
+                    if (!c.isActioning) {
+                        c.isActioning = true;
+                        setTimeout(() => {
+                            if (c.target && c.target.stock > 0) {
+                                c.target.stock--;
+                                c.cart += PRODUCTS[c.target.product].sellPrice;
+                                updateShelvesVisuals();
+                            }
+                            c.shoppingListSize--;
+                            c.state = 'entering'; // Re-eval
+                            c.isActioning = false;
+                        }, 1000); // 1 sec to pick item
+                    }
+                }
+                else if (c.state === 'seeking_cashier') {
+                    if (c.cart === 0) {
+                        c.state = 'leaving'; // Didn't buy anything
+                        game.reputation = Math.max(0, game.reputation - 1);
+                    } else {
+                        // Find shortest queue
+                        let bestReg = registers.sort((a,b) => a.queue.length - b.queue.length)[0];
+                        if (bestReg) {
+                            c.target = bestReg;
+                            c.state = 'in_queue';
+                            bestReg.queue.push(c);
+                            // Visual Queue Positioning
+                            let qIndex = bestReg.queue.indexOf(c);
+                            moveEntity(c, bestReg.x, bestReg.y - 40 - (qIndex * 35)); 
+                        }
+                    }
+                }
+                else if (c.state === 'leaving') {
+                    moveEntity(c, 400, 600); // Back to door
+                    if (!c.isActioning) {
+                        c.isActioning = true;
+                        setTimeout(() => {
+                            c.el.remove();
+                            customers.splice(index, 1);
+                        }, 500);
+                    }
+                }
+            });
+
+            // 2. Cashier AI (Process Queues)
+            registers.forEach(r => {
+                if (r.queue.length > 0 && r.isManned) {
+                    if (!r.isProcessing) {
+                        r.isProcessing = true;
+                        setTimeout(() => {
+                            let c = r.queue.shift(); // Remove first customer
+                            game.money += c.cart;
+                            game.reputation++;
+                            playSound('cash');
+                            updateUI();
+                            c.state = 'leaving';
+                            r.isProcessing = false;
+                            
+                            // Move remaining queue up
+                            r.queue.forEach((qc, qi) => {
+                                moveEntity(qc, r.x, r.y - 40 - (qi * 35));
+                            });
+                        }, 1500); // 1.5s per checkout
+                    }
+                }
+            });
+
+            // 3. Restocker AI
+            staffList.forEach(st => {
+                if (st.type === 'restocker') {
+                    if (!st.isBusy) {
+                        // Find empty shelf
+                        let empty = shelves.find(s => s.product && s.stock < PRODUCTS[s.product].maxStock);
+                        if (empty && storage[empty.product] > 0) {
+                            st.isBusy = true;
+                            moveEntity(st, empty.x + 40, empty.y); // Move to shelf
+                            setTimeout(() => {
+                                let p = PRODUCTS[empty.product];
+                                let needed = p.maxStock - empty.stock;
+                                let available = storage[empty.product];
+                                let take = Math.min(needed, available);
+                                
+                                storage[empty.product] -= take;
+                                empty.stock += take;
+                                updateShelvesVisuals();
+                                updateUI();
+                                st.isBusy = false;
+                                moveEntity(st, 10, 10); // Back to corner
+                            }, 2000);
+                        }
+                    }
+                }
+            });
+        }
+
+        /* -------------------------------------------------------------
+           6. STAFF MANAGEMENT
+           ------------------------------------------------------------- */
+        function hireStaff(type) {
+            let cost = game.prices[type];
+            if (game.money >= cost) {
+                game.money -= cost;
+                game.prices[type] = Math.floor(cost * 1.5);
+                
+                if (type === 'cashier') {
+                    // Find unmanned register
+                    let emptyReg = registers.find(r => !r.isManned);
+                    if (emptyReg) {
+                        emptyReg.isManned = true;
+                        let el = document.createElement('div');
+                        el.className = 'entity staff';
+                        el.innerText = '🧑‍💼';
+                        floorEl.appendChild(el);
+                        moveEntity({el: el}, emptyReg.x + 15, emptyReg.y + 15);
+                        showToast("Cashier Hired!");
+                    } else {
+                        game.money += cost; // Refund
+                        showToast("No empty registers!", "error");
+                        playSound('error'); return;
+                    }
+                } else if (type === 'restocker') {
+                    let el = document.createElement('div');
+                    el.className = 'entity staff';
+                    el.innerText = '👷';
+                    floorEl.appendChild(el);
+                    let st = { type: 'restocker', el: el, isBusy: false };
+                    staffList.push(st);
+                    moveEntity(st, 10, 10);
+                    showToast("Restocker Hired!");
+                }
+                playSound('buy');
+                updateUI();
+            } else playSound('error');
+        }
+
+        /* -------------------------------------------------------------
+           7. TIME & UI MANAGEMENT
+           ------------------------------------------------------------- */
+        function updateTime() {
+            game.time += 1; // 1 min per sec
+            let h = Math.floor(game.time / 60);
+            let m = game.time % 60;
+            document.getElementById('ui-time').innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+            
+            // Closing time 22:00 (10 PM)
+            if (h >= 22 && game.isOpen) {
+                toggleStoreStatus();
+                showToast("Store Closed for the night. Resetting for tomorrow!");
+                setTimeout(() => {
+                    game.time = 8 * 60; // Reset to 8 AM
+                    game.day++;
+                    showToast(`Day ${game.day} Started!`);
+                }, 5000);
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('ui-money').innerText = game.money;
+            document.getElementById('ui-rep').innerText = game.reputation;
+            
+            // Update Storage Counters
+            document.getElementById('st-apple').innerText = storage.apple;
+            document.getElementById('st-bread').innerText = storage.bread;
+            document.getElementById('st-milk').innerText = storage.milk;
+
+            // Update Costs
+            document.getElementById('cost-shelf').innerText = game.prices.shelf;
+            document.getElementById('cost-register').innerText = game.prices.register;
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        
+        function showToast(msg, type = 'success') {
+            let container = document.getElementById('toast-container');
+            let toast = document.createElement('div');
+            toast.className = 'toast';
+            if(type === 'error') toast.style.borderLeftColor = 'var(--danger)';
+            toast.innerText = msg;
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 3000);
+        }
     </script>
 </body>
 </html>
