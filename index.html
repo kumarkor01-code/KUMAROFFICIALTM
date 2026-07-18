@@ -2,105 +2,143 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Supermarket Tycoon PRO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catch The Thief</title>
     <style>
-        body { background: #0a0a0a; color: #fff; font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 20px; }
-        .header { background: #1a1a1a; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #444; }
-        .money-bar { font-size: 24px; color: #00ff00; font-weight: bold; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
-        .shelf { background: #222; padding: 20px; border-radius: 15px; border: 2px solid #333; cursor: pointer; transition: 0.3s; }
-        .shelf:hover { border-color: #00ff00; transform: scale(1.05); }
-        .btn { background: #007bff; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 10px; font-weight: bold; }
+        body { 
+            background: #111; 
+            color: white; 
+            text-align: center; 
+            font-family: Arial, sans-serif; 
+            margin-top: 30px; 
+            user-select: none;
+        }
+        h1 { color: #ffcc00; letter-spacing: 2px; }
+        #score-board { 
+            font-size: 24px; 
+            color: #00ff00; 
+            font-weight: bold; 
+            margin-bottom: 20px; 
+        }
+        #grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 100px); 
+            gap: 15px; 
+            justify-content: center; 
+            margin-top: 20px; 
+        }
+        .hole { 
+            width: 100px; 
+            height: 100px; 
+            background: #222; 
+            border-radius: 15px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 55px; 
+            cursor: pointer; 
+            border: 3px solid #444; 
+            transition: 0.1s;
+        }
+        .hole:active { 
+            background: #555; 
+            transform: scale(0.9); 
+        }
+        .btn {
+            background: #ff0055;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 10px;
+            margin-top: 30px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h1>SUPERMARKET TYCOON</h1>
-    <div class="money-bar">Balance: $<span id="balance">100</span></div>
-</div>
+    <h1>👮 CATCH THE THIEF!</h1>
+    <div id="score-board">Score: <span id="score">0</span></div>
 
-<div class="grid" id="shop-grid">
-    <!-- Shelves will appear here -->
-</div>
+    <div id="grid">
+        <div class="hole" onclick="hit(0)" id="hole-0"></div>
+        <div class="hole" onclick="hit(1)" id="hole-1"></div>
+        <div class="hole" onclick="hit(2)" id="hole-2"></div>
+        <div class="hole" onclick="hit(3)" id="hole-3"></div>
+        <div class="hole" onclick="hit(4)" id="hole-4"></div>
+        <div class="hole" onclick="hit(5)" id="hole-5"></div>
+        <div class="hole" onclick="hit(6)" id="hole-6"></div>
+        <div class="hole" onclick="hit(7)" id="hole-7"></div>
+        <div class="hole" onclick="hit(8)" id="hole-8"></div>
+    </div>
 
-<button class="btn" style="background:#28a745; max-width: 300px;" onclick="addShelf()">BUILD NEW SHELF ($50)</button>
+    <button class="btn" onclick="startGame()">🔄 RESTART GAME</button>
 
-<script>
-    let money = 100;
-    let shelves = [];
+    <script>
+        let score = 0;
+        let currentThief = -1;
+        let currentBomb = -1;
+        let gameInterval;
+        let gameSpeed = 1000; // 1 second
 
-    function addShelf() {
-        if (money >= 50) {
-            money -= 50;
-            shelves.push({ stock: 5 });
-            updateBalance();
-            renderShop();
-        } else {
-            alert("Not enough money!");
+        function startGame() {
+            score = 0;
+            gameSpeed = 1000;
+            document.getElementById('score').innerText = score;
+            clearInterval(gameInterval);
+            gameInterval = setInterval(randomize, gameSpeed);
         }
-    }
 
-    function sellItem(index) {
-        if (shelves[index].stock > 0) {
-            shelves[index].stock--;
-            money += 10; // 10 dollars per sale
-            updateBalance();
-            renderShop();
-            playSuccessSound();
-        } else {
-            alert("Shelf empty! Click Restock.");
-        }
-    }
-
-    function restock(index) {
-        if (money >= 5) {
-            money -= 5;
-            shelves[index].stock = 5;
-            updateBalance();
-            renderShop();
-        } else {
-            alert("Not enough money to restock!");
-        }
-    }
-
-    function updateBalance() {
-        document.getElementById('balance').innerText = money;
-    }
-
-    function renderShop() {
-        const grid = document.getElementById('shop-grid');
-        grid.innerHTML = '';
-        shelves.forEach((s, i) => {
-            grid.innerHTML += `
-                <div class="shelf" onclick="sellItem(${i})">
-                    <h3>Shelf ${i+1}</h3>
-                    <p>Stock: ${s.stock} / 5</p>
-                    <button class="btn" onclick="event.stopPropagation(); restock(${i})">Restock ($5)</button>
-                </div>
-            `;
-        });
-    }
-
-    function playSuccessSound() {
-        let audio = new AudioContext();
-        let osc = audio.createOscillator();
-        osc.connect(audio.destination);
-        osc.frequency.value = 440;
-        osc.start();
-        osc.stop(audio.currentTime + 0.1);
-    }
-
-    // Auto-Customer Logic
-    setInterval(() => {
-        shelves.forEach((s, i) => {
-            if (s.stock > 0 && Math.random() > 0.7) {
-                sellItem(i);
+        function randomize() {
+            // सर्व बॉक्सेस रिकामे करणे
+            for (let i = 0; i < 9; i++) {
+                document.getElementById('hole-' + i).innerText = "";
             }
-        });
-    }, 2000);
 
-    renderShop();
-</script>
+            // चोर आणि बॉम्बसाठी रँडम जागा निवडणे
+            currentThief = Math.floor(Math.random() * 9);
+            currentBomb = Math.floor(Math.random() * 9);
+
+            // दोघे एकाच जागी येऊ नयेत म्हणून चेक करणे
+            if (currentThief === currentBomb) {
+                currentBomb = (currentBomb + 1) % 9;
+            }
+
+            // स्क्रीनवर दाखवणे
+            document.getElementById('hole-' + currentThief).innerText = "👺";
+            document.getElementById('hole-' + currentBomb).innerText = "💣";
+        }
+
+        function hit(index) {
+            if (index === currentThief) {
+                score += 10;
+                document.getElementById('score').innerText = score;
+                document.getElementById('hole-' + index).innerText = "💥"; // मारल्याचा इफेक्ट
+                currentThief = -1; // डबल क्लिक टाळण्यासाठी
+                
+                // स्कोर वाढेल तसा गेम फास्ट होईल
+                if (score % 50 === 0 && gameSpeed > 400) {
+                    gameSpeed -= 100;
+                    clearInterval(gameInterval);
+                    gameInterval = setInterval(randomize, gameSpeed);
+                }
+            } 
+            else if (index === currentBomb) {
+                clearInterval(gameInterval);
+                alert("💥 BOOM! गेम ओव्हर!\nतुझा फायनल स्कोर आहे: " + score);
+                
+                // सगळे बॉक्सेस रिकामे करणे
+                for (let i = 0; i < 9; i++) {
+                    document.getElementById('hole-' + i).innerText = "";
+                }
+            }
+        }
+
+        // गेम सुरु करणे
+        startGame();
+    </script>
 </body>
 </html>
+
