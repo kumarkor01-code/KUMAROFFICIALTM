@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supermarket Tycoon</title>
+    <style>
+        body { background: #1a1a1a; color: white; text-align: center; font-family: 'Poppins', sans-serif; }
+        .game-box { background: #333; padding: 20px; border-radius: 15px; width: 350px; margin: auto; }
+        .shelf { border: 2px solid #555; padding: 10px; margin: 10px; border-radius: 10px; cursor: pointer; }
+        .shelf:hover { border-color: #ffd700; }
+        button { background: #ff4500; border: none; padding: 10px; color: white; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h1>🛒 SUPERMARKET</h1>
+    <div class="game-box">
+        <h3>Coins: <span id="coins">50</span></h3>
+        <p id="msg">Welcome! Buy your first shelf.</p>
+        <div id="shop"></div>
+    </div>
+
+    <script>
+        let coins = 50;
+        let shelves = [];
+
+        function buyShelf() {
+            if (coins >= 30) {
+                coins -= 30;
+                shelves.push({ stock: 0, active: true });
+                updateUI();
+                playSound('https://www.soundjay.com/buttons/sounds/button-7.mp3');
+            } else { alert("Not enough coins!"); }
+        }
+
+        function restock(index) {
+            if (coins >= 10) {
+                coins -= 10;
+                shelves[index].stock += 5;
+                updateUI();
+                playSound('https://www.soundjay.com/mechanical/sounds/drawer-open-1.mp3');
+            }
+        }
+
+        function playSound(url) { new Audio(url).play(); }
+
+        function updateUI() {
+            document.getElementById('coins').innerText = coins;
+            let shop = document.getElementById('shop');
+            shop.innerHTML = `<button onclick="buyShelf()">Buy Shelf (30 Coins)</button>`;
+            shelves.forEach((s, i) => {
+                shop.innerHTML += `
+                    <div class="shelf">
+                        Shelf ${i+1} | Stock: ${s.stock} 
+                        <button onclick="restock(${i})">Restock (10 Coins)</button>
+                    </div>`;
+            });
+        }
+
+        // ऑटो-अर्निंग लॉजिक (ग्राहक येणे)
+        setInterval(() => {
+            shelves.forEach(s => {
+                if (s.stock > 0) {
+                    s.stock--;
+                    coins += 5;
+                    updateUI();
+                }
+            });
+        }, 3000); // दर ३ सेकंदाला कमाई
+
+        updateUI();
+    </script>
+</body>
+</html>
