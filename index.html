@@ -2,247 +2,67 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Music Player</title>
-    <link href="https://youtu.be/QHdajZktFEU?si=w0lkP2fk3zI3_7Tl" rel="stylesheet">
+    <title>Pro Music Dashboard</title>
     <style>
-        /* =========================================
-           1. BACKGROUND & LAYOUT
-           ========================================= */
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        body {
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            overflow: hidden;
-        }
-
-        /* =========================================
-           2. GLASSMORPHISM CARD (The Player)
-           ========================================= */
-        .player-card {
-            width: 320px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 30px;
-            padding: 30px 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-            text-align: center;
-            color: white;
-        }
-
-        /* =========================================
-           3. COVER IMAGE & ANIMATION
-           ========================================= */
-        .cover-container {
-            width: 180px;
-            height: 180px;
-            margin: 0 auto 20px;
-            border-radius: 50%;
-            padding: 5px;
-            background: linear-gradient(45deg, #ff6b6b, #f06595, #cc5de8, #845ef7, #5c7cfa, #339af0, #22b8cf, #20c997, #51cf66, #94d82d, #fcc419, #ff922b);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-        }
-        .cover-img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid #1e3c72;
-        }
+        :root { --accent: #ff007f; --bg: #0f0f0f; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; }
         
-        /* Animation class applied via JavaScript */
-        .spin {
-            animation: spinRecord 5s linear infinite;
-        }
-        @keyframes spinRecord {
-            100% { transform: rotate(360deg); }
-        }
+        /* Playlist Sidebar */
+        #sidebar { width: 300px; background: #1a1a1a; padding: 20px; border-right: 1px solid #333; }
+        .song-item { padding: 15px; border-bottom: 1px solid #333; cursor: pointer; transition: 0.3s; }
+        .song-item:hover { background: #333; }
 
-        /* =========================================
-           4. SONG DETAILS
-           ========================================= */
-        .song-title { font-size: 22px; font-weight: 600; margin-bottom: 5px; letter-spacing: 1px; }
-        .artist-name { font-size: 14px; font-weight: 300; color: #cbd5e1; margin-bottom: 25px; }
-
-        /* =========================================
-           5. PROGRESS BAR
-           ========================================= */
-        .progress-container { margin-bottom: 20px; }
-        .time-box {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: #e2e8f0;
-            margin-bottom: 8px;
-        }
-        .progress-bar {
-            width: 100%;
-            -webkit-appearance: none;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 5px;
-            outline: none;
-            cursor: pointer;
-        }
-        .progress-bar::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: #fff;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(255,255,255,0.8);
-        }
-
-        /* =========================================
-           6. CONTROLS (Buttons)
-           ========================================= */
-        .controls {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 25px;
-        }
-        .btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: 0.2s;
-        }
-        .btn:hover { transform: scale(1.1); filter: brightness(1.2); }
-        .btn:active { transform: scale(0.9); }
+        /* Main Player Area */
+        #main { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: radial-gradient(circle, #333 0%, #000 100%); }
+        .visualizer { display: flex; gap: 5px; height: 100px; align-items: flex-end; margin-bottom: 40px; }
+        .bar { width: 10px; background: var(--accent); animation: pulse 0.5s infinite alternate; }
+        @keyframes pulse { from { height: 20px; } to { height: 80px; } }
         
-        .play-btn {
-            background: #fff;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
+        .controls { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 50px; display: flex; gap: 20px; }
+        button { background: var(--accent); color: white; border: none; padding: 15px 30px; border-radius: 30px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="player-card">
-        <!-- Audio Element (Hidden) -->
-        <audio id="audio" src="https://youtu.be/QHdajZktFEU?si=nBI27L-o_PL4s74o"></audio>
+    <div id="sidebar">
+        <h2>My Playlist</h2>
+        <div class="song-item" onclick="loadSong('Midnight Vibes', 'Electronic Chill')">1. Midnight Vibes</div>
+        <div class="song-item" onclick="loadSong('Relaxing Rain', 'Nature Sound')">2. Relaxing Rain</div>
+        <div class="song-item" onclick="loadSong('Morning Energy', 'Pop Mix')">3. Morning Energy</div>
+    </div>
 
-        <!-- CD Cover -->
-        <div class="cover-container">
-            <img src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=500&auto=format&fit=crop" class="cover-img" id="cover" alt="Song Cover">
+    <div id="main">
+        <div class="visualizer">
+            <div class="bar" style="animation-delay: 0.1s"></div>
+            <div class="bar" style="animation-delay: 0.2s"></div>
+            <div class="bar" style="animation-delay: 0.3s"></div>
+            <div class="bar" style="animation-delay: 0.4s"></div>
+            <div class="bar" style="animation-delay: 0.5s"></div>
         </div>
-
-        <!-- Details -->
-        <div class="song-title">Midnight Vibes</div>
-        <div class="artist-name">Electronic Chill</div>
-
-        <!-- Progress Bar -->
-        <div class="progress-container">
-            <div class="time-box">
-                <span id="current-time">0:00</span>
-                <span id="total-time">0:00</span>
-            </div>
-            <input type="range" class="progress-bar" id="progress" value="0" min="0" max="100">
-        </div>
-
-        <!-- Controls -->
+        
+        <h1 id="title">Select a Song</h1>
+        <p id="artist">Artist Name</p>
+        
         <div class="controls">
-            <!-- Previous Button (Inline SVG for perfect display) -->
-            <button class="btn">
-                <svg viewBox="0 0 24 24" fill="white" width="28" height="28"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-            </button>
-
-            <!-- Play/Pause Button -->
-            <button class="btn play-btn" id="play-pause-btn" onclick="togglePlay()">
-                <!-- Play Icon (Default) -->
-                <svg id="play-icon" viewBox="0 0 24 24" fill="#1e3c72" width="32" height="32" style="margin-left: 4px;"><path d="M8 5v14l11-7z"/></svg>
-                <!-- Pause Icon (Hidden initially) -->
-                <svg id="pause-icon" viewBox="0 0 24 24" fill="#1e3c72" width="32" height="32" style="display: none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-            </button>
-
-            <!-- Next Button -->
-            <button class="btn">
-                <svg viewBox="0 0 24 24" fill="white" width="28" height="28"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
-            </button>
+            <button onclick="prev()">⏮️</button>
+            <button id="playBtn" onclick="togglePlay()">▶️ PLAY</button>
+            <button onclick="next()">⏭️</button>
         </div>
     </div>
 
-    <!-- =========================================
-         JAVASCRIPT LOGIC
-         ========================================= -->
+    <audio id="audio"></audio>
+
     <script>
-        const audio = document.getElementById('audio');
-        const playPauseBtn = document.getElementById('play-pause-btn');
-        const playIcon = document.getElementById('play-icon');
-        const pauseIcon = document.getElementById('pause-icon');
-        const cover = document.getElementById('cover');
-        const progress = document.getElementById('progress');
-        const currentTimeEl = document.getElementById('current-time');
-        const totalTimeEl = document.getElementById('total-time');
-
         let isPlaying = false;
-
-        // 1. Play / Pause Function
+        function loadSong(title, artist) {
+            document.getElementById('title').innerText = title;
+            document.getElementById('artist').innerText = artist;
+            alert("Loading: " + title);
+        }
         function togglePlay() {
-            if (isPlaying) {
-                audio.pause();
-                playIcon.style.display = 'block';
-                pauseIcon.style.display = 'none';
-                cover.classList.remove('spin');
-            } else {
-                audio.play();
-                playIcon.style.display = 'none';
-                pauseIcon.style.display = 'block';
-                cover.classList.add('spin');
-            }
             isPlaying = !isPlaying;
+            document.getElementById('playBtn').innerText = isPlaying ? "⏸️ PAUSE" : "▶️ PLAY";
         }
-
-        // 2. Format Time (Convert seconds to M:SS)
-        function formatTime(seconds) {
-            let min = Math.floor(seconds / 60);
-            let sec = Math.floor(seconds % 60);
-            if (sec < 10) sec = '0' + sec;
-            return `${min}:${sec}`;
-        }
-
-        // 3. Update Progress Bar & Time as song plays
-        audio.addEventListener('timeupdate', () => {
-            if (audio.duration) {
-                const percent = (audio.currentTime / audio.duration) * 100;
-                progress.value = percent;
-                currentTimeEl.innerText = formatTime(audio.currentTime);
-            }
-        });
-
-        // 4. Set Total Time when audio loads
-        audio.addEventListener('loadedmetadata', () => {
-            totalTimeEl.innerText = formatTime(audio.duration);
-        });
-
-        // 5. Seek / Change song position when slider is clicked
-        progress.addEventListener('input', () => {
-            const seekTime = (progress.value / 100) * audio.duration;
-            audio.currentTime = seekTime;
-        });
-
-        // 6. Reset UI when song ends
-        audio.addEventListener('ended', () => {
-            isPlaying = false;
-            playIcon.style.display = 'block';
-            pauseIcon.style.display = 'none';
-            cover.classList.remove('spin');
-            progress.value = 0;
-            currentTimeEl.innerText = "0:00";
-        });
     </script>
 </body>
 </html>
