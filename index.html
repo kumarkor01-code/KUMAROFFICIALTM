@@ -264,8 +264,6 @@
 
             if (!name || !tgId || !pass) return alert("Please fill all fields!");
 
-            // Check if user already exists
-            // (In Firebase: db.ref('users/' + tgId).once('value').then(...))
             if (mockDB.users[tgId]) {
                 alert("Account with this Telegram ID already exists! Please Login.");
                 return;
@@ -273,17 +271,33 @@
 
             tempRegData = { name, tgId, pass, coins: 0, isBanned: false, isAdmin: false, profilePic: "" };
             
-            // GENERATE OTP & SEND TO TELEGRAM BOT
+            // 4 अंकी OTP जनरेट करणे
             generatedOTP = Math.floor(1000 + Math.random() * 9000).toString();
             
-            /* 
-             * SERVER CALL COMMENT (तुम्ही हा API कॉल तुमच्या Backend ला करा)
-             * fetch(`https://your-api.com/sendOTP?tgId=${tgId}&otp=${generatedOTP}`)
-             */
-            console.log(`[SYSTEM] OTP for ${tgId} is: ${generatedOTP}`); // For testing
-            alert(`OTP sent to Telegram! (Check console for testing: ${generatedOTP})`);
+            // ----------------------------------------------------
+            // येथे तुमचा TELEGRAM BOT TOKEN टाका 👇
+            const botToken = "8664714790:AAESKrpFQb0Ks8YVZIIIqrv_STWfi0I2gVI"; 
+            // ----------------------------------------------------
+
+            const message = `Welcome to Gamer Hub! 🎮\n\nYour OTP for registration is: *${generatedOTP}*\n\nDo not share this OTP with anyone.`;
             
-            switchScreen('screen-otp');
+            // Telegram API ला रिक्वेस्ट पाठवणे
+            const telegramApiUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${tgId}&text=${encodeURIComponent(message)}&parse_mode=Markdown`;
+
+            fetch(telegramApiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if(data.ok) {
+                        alert("OTP sent successfully to your Telegram!");
+                        switchScreen('screen-otp');
+                    } else {
+                        alert("Error: " + data.description + "\n\n(टीप: युझरने आधी तुमच्या बॉटला Telegram वर जाऊन 'Start' करणे आवश्यक आहे!)");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("Failed to send OTP. Check console.");
+                });
         }
 
         function verifyOtpAndCreateAccount() {
