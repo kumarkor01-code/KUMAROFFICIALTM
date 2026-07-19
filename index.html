@@ -3,273 +3,532 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stylish Tic-Tac-Toe</title>
+    <title>Pro Gaming Hub & Admin</title>
+    <!-- Firebase SDK (येथे तुम्ही तुमच्या Firebase लिंक्स टाकू शकता) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    
     <style>
-        /* गुगल फॉन्ट */
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;600&display=swap');
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
+        :root {
+            --bg: #0a0a0f;
+            --primary: #00ffcc;
+            --secondary: #ff007f;
+            --panel: rgba(255, 255, 255, 0.05);
+            --text: #ffffff;
         }
 
-        body {
-            /* डार्क आणि स्टायलिश बॅकग्राऊंड */
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        
+        body { background: var(--bg); color: var(--text); overflow-x: hidden; }
 
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-            letter-spacing: 2px;
-        }
+        /* --- UI Screens System --- */
+        .screen { display: none; min-height: 100vh; width: 100%; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .active-screen { display: flex; animation: fadeIn 0.5s ease-in-out; }
 
-        /* स्कोअरबोर्ड डिझाईन */
-        .scoreboard {
-            display: flex;
-            gap: 30px;
-            margin-bottom: 20px;
-            font-size: 1.2rem;
-            font-weight: 600;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px 30px;
-            border-radius: 15px;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
-        .score-x { color: #00ffcc; text-shadow: 0 0 8px #00ffcc; }
-        .score-o { color: #ff007f; text-shadow: 0 0 8px #ff007f; }
-
-        .status {
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-            height: 30px;
-            font-weight: 600;
-            color: #00ffcc;
+        /* --- Typography & Elements --- */
+        h1, h2 { font-family: 'Orbitron', sans-serif; text-transform: uppercase; margin-bottom: 20px; text-shadow: 0 0 10px var(--primary); }
+        h1 { font-size: 2.5rem; color: var(--primary); }
+        
+        input {
+            width: 100%; max-width: 350px; padding: 15px; margin: 10px 0;
+            background: rgba(0,0,0,0.5); border: 1px solid var(--primary);
+            color: white; border-radius: 10px; font-size: 1rem; outline: none;
         }
+        input:focus { box-shadow: 0 0 15px var(--primary); }
 
-        /* गेमचा बोर्ड */
-        .board {
-            display: grid;
-            grid-template-columns: repeat(3, 100px);
-            grid-template-rows: repeat(3, 100px);
-            gap: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 15px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        button {
+            width: 100%; max-width: 350px; padding: 15px; margin: 15px 0;
+            background: linear-gradient(45deg, var(--primary), #00b3ff);
+            color: black; font-weight: bold; border: none; border-radius: 10px;
+            font-size: 1.2rem; cursor: pointer; transition: 0.3s;
+            text-transform: uppercase; letter-spacing: 1px;
         }
+        button:hover { transform: translateY(-3px); box-shadow: 0 5px 20px var(--primary); }
+        
+        .btn-secondary { background: transparent; border: 1px solid var(--secondary); color: var(--secondary); }
+        .btn-secondary:hover { background: var(--secondary); color: white; box-shadow: 0 5px 20px var(--secondary); }
 
-        .cell {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 4.5rem;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
-        }
+        .link-text { color: var(--primary); cursor: pointer; font-size: 0.9rem; margin-top: 10px; text-decoration: underline; }
 
-        .cell:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-3px);
-            box-shadow: inset 0 0 15px rgba(255,255,255,0.1);
-        }
+        /* --- Dashboard UI --- */
+        .header { width: 100%; max-width: 600px; background: var(--panel); padding: 20px; border-radius: 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
+        .profile-pic { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--primary); cursor: pointer; background: url('https://via.placeholder.com/60') center/cover; }
+        .user-info { flex-grow: 1; margin-left: 15px; }
+        .user-name { font-size: 1.2rem; font-weight: bold; }
+        .coin-balance { color: gold; font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; gap: 5px; }
+        
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 600px; }
+        .menu-card { background: var(--panel); padding: 30px 20px; border-radius: 15px; text-align: center; cursor: pointer; border: 1px solid transparent; transition: 0.3s; }
+        .menu-card:hover { border-color: var(--primary); background: rgba(0, 255, 204, 0.1); transform: scale(1.05); }
+        .menu-card h3 { font-family: 'Orbitron'; font-size: 1.2rem; margin-bottom: 10px; }
 
-        /* X आणि O साठी निऑन इफेक्ट्स */
-        .cell.x {
-            color: #00ffcc;
-            text-shadow: 0 0 20px #00ffcc;
-        }
+        /* --- Leaderboard & Admin --- */
+        .list-container { width: 100%; max-width: 600px; background: var(--panel); border-radius: 15px; padding: 20px; max-height: 400px; overflow-y: auto; }
+        .list-item { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .list-item:last-child { border-bottom: none; }
 
-        .cell.o {
-            color: #ff007f;
-            text-shadow: 0 0 20px #ff007f;
-        }
+        /* --- Tic-Tac-Toe Board --- */
+        .board { display: grid; grid-template-columns: repeat(3, 80px); gap: 10px; margin: 20px 0; }
+        .cell { width: 80px; height: 80px; background: var(--panel); display: flex; align-items: center; justify-content: center; font-size: 3rem; border-radius: 10px; cursor: pointer; font-family: 'Orbitron'; color: white; }
+        .cell.x { color: var(--primary); text-shadow: 0 0 10px var(--primary); }
+        .cell.o { color: var(--secondary); text-shadow: 0 0 10px var(--secondary); }
 
-        /* Play Again बटण */
-        .reset-btn {
-            margin-top: 35px;
-            padding: 12px 35px;
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: white;
-            background: linear-gradient(45deg, #ff007f, #ff5e00);
-            border: none;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 5px 15px rgba(255, 0, 127, 0.4);
-            letter-spacing: 1px;
-        }
-
-        .reset-btn:hover {
-            transform: scale(1.08);
-            box-shadow: 0 8px 25px rgba(255, 0, 127, 0.6);
-        }
+        /* File Input Hidden */
+        #profile-upload { display: none; }
     </style>
 </head>
 <body>
 
-    <h1>Tic-Tac-Toe</h1>
-    
-    <div class="scoreboard">
-        <div>Player X: <span id="score-x" class="score-x">0</span></div>
-        <div>Player O: <span id="score-o" class="score-o">0</span></div>
+    <!-- 1. Splash Screen -->
+    <div id="screen-splash" class="screen active-screen">
+        <h1 style="font-size: 4rem; animation: pulse 1.5s infinite;">GAMER HUB</h1>
+        <p>Loading System...</p>
     </div>
 
-    <div class="status">X's Turn</div>
-
-    <div class="board">
-        <div class="cell" data-index="0"></div>
-        <div class="cell" data-index="1"></div>
-        <div class="cell" data-index="2"></div>
-        <div class="cell" data-index="3"></div>
-        <div class="cell" data-index="4"></div>
-        <div class="cell" data-index="5"></div>
-        <div class="cell" data-index="6"></div>
-        <div class="cell" data-index="7"></div>
-        <div class="cell" data-index="8"></div>
+    <!-- 2. Login Screen -->
+    <div id="screen-login" class="screen">
+        <h1>LOGIN</h1>
+        <input type="text" id="login-tg-id" placeholder="Telegram User ID" autocomplete="off">
+        <input type="password" id="login-pass" placeholder="Password">
+        <button onclick="loginUser()">Enter Hub</button>
+        <p class="link-text" onclick="switchScreen('screen-register')">Create New Account</p>
+        <p class="link-text" onclick="switchScreen('screen-forgot')">Forgot Password?</p>
     </div>
 
-    <button class="reset-btn">Play Again</button>
+    <!-- 3. Register Screen -->
+    <div id="screen-register" class="screen">
+        <h1>REGISTER</h1>
+        <input type="text" id="reg-name" placeholder="Full Name">
+        <input type="text" id="reg-tg-id" placeholder="Telegram User ID (e.g. 123456789)">
+        <input type="password" id="reg-pass" placeholder="Create Password">
+        <button onclick="initiateRegistration()">Send OTP via Bot</button>
+        <p class="link-text" onclick="switchScreen('screen-login')">Back to Login</p>
+    </div>
 
+    <!-- 4. OTP Verification Screen -->
+    <div id="screen-otp" class="screen">
+        <h2>VERIFY OTP</h2>
+        <p style="margin-bottom: 20px; font-size: 0.9rem; text-align:center;">OTP sent to your Telegram Bot.</p>
+        <input type="number" id="otp-input" placeholder="Enter 4-digit OTP">
+        <button onclick="verifyOtpAndCreateAccount()">Verify & Create Account</button>
+        <p class="link-text" onclick="switchScreen('screen-register')">Cancel</p>
+    </div>
+
+    <!-- 5. Main Dashboard -->
+    <div id="screen-dashboard" class="screen">
+        <div class="header">
+            <input type="file" id="profile-upload" accept="image/*" onchange="updateProfilePic(event)">
+            <div class="profile-pic" id="display-pic" onclick="document.getElementById('profile-upload').click()"></div>
+            <div class="user-info">
+                <div class="user-name" id="dash-name">Player Name</div>
+                <div class="coin-balance">🪙 <span id="dash-coins">0</span> Coins</div>
+            </div>
+            <button class="btn-secondary" style="width: auto; padding: 10px 15px; margin:0;" onclick="logout()">Logout</button>
+        </div>
+
+        <div class="menu-grid">
+            <div class="menu-card" onclick="switchScreen('screen-games')">
+                <h3>🎮 PLAY GAMES</h3>
+                <p>Earn Coins</p>
+            </div>
+            <div class="menu-card" onclick="switchScreen('screen-tasks')">
+                <h3>📋 TASKS</h3>
+                <p>Daily Rewards</p>
+            </div>
+            <div class="menu-card" onclick="loadLeaderboard()">
+                <h3>🏆 LEADERBOARD</h3>
+                <p>Top Players</p>
+            </div>
+            <div class="menu-card" onclick="checkAdmin()" id="admin-btn" style="display: none; border-color: var(--secondary);">
+                <h3 style="color: var(--secondary);">⚙️ ADMIN PANEL</h3>
+                <p>Control Hub</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Games List Screen -->
+    <div id="screen-games" class="screen">
+        <h1>SELECT GAME</h1>
+        <button onclick="startOXGame()">⭕ Tic-Tac-Toe (Vs Bot)</button>
+        <button onclick="alert('Dots & Boxes Coming Soon!')">🔲 Dots & Boxes</button>
+        <button onclick="alert('Memory Match Coming Soon!')">🃏 Memory Match</button>
+        <button class="btn-secondary" onclick="switchScreen('screen-dashboard')">Back</button>
+    </div>
+
+    <!-- 7. OX Game Screen -->
+    <div id="screen-game-ox" class="screen">
+        <h2>TIC-TAC-TOE</h2>
+        <div id="ox-status" style="color: var(--primary); font-size: 1.2rem; margin-bottom: 10px;">Your Turn</div>
+        <p style="font-size: 0.9rem; margin-bottom: 15px;">Win reward: 🪙 <span id="ox-reward">50</span></p>
+        
+        <div class="board" id="ox-board">
+            <!-- 9 Cells generated by JS -->
+        </div>
+        
+        <button class="btn-secondary" onclick="switchScreen('screen-games')">Exit Game</button>
+    </div>
+
+    <!-- 8. Leaderboard Screen -->
+    <div id="screen-leaderboard" class="screen">
+        <h1>LEADERBOARD</h1>
+        <div class="list-container" id="leaderboard-list">
+            <!-- Populated by JS -->
+        </div>
+        <button class="btn-secondary" onclick="switchScreen('screen-dashboard')">Back</button>
+    </div>
+
+    <!-- 9. Admin Panel -->
+    <div id="screen-admin" class="screen">
+        <h1 style="color: var(--secondary);">ADMIN PANEL</h1>
+        <div class="list-container">
+            <h3>Game Rewards Config</h3>
+            <input type="number" id="admin-ox-reward" placeholder="Tic-Tac-Toe Coin Reward">
+            <button onclick="saveAdminSettings()">Save Settings</button>
+            <hr style="border-color: rgba(255,255,255,0.1); margin: 20px 0;">
+            <h3>User Management</h3>
+            <input type="text" id="admin-target-tg" placeholder="Target Telegram ID">
+            <input type="number" id="admin-coin-amount" placeholder="Coins to Add/Remove">
+            <div style="display: flex; gap: 10px;">
+                <button onclick="modifyCoins(true)">Add Coins</button>
+                <button class="btn-secondary" onclick="modifyCoins(false)">Remove Coins</button>
+            </div>
+            <button style="background: red; color: white;" onclick="banUser()">Ban / Unban User</button>
+        </div>
+        <button class="btn-secondary" onclick="switchScreen('screen-dashboard')">Exit Admin</button>
+    </div>
+
+
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
     <script>
-        // JavaScript लॉजिक
-        const cells = document.querySelectorAll('.cell');
-        const statusText = document.querySelector('.status');
-        const resetBtn = document.querySelector('.reset-btn');
-        const scoreXText = document.getElementById('score-x');
-        const scoreOText = document.getElementById('score-o');
+        /* 
+         * FIREBASE CONFIGURATION (तुम्ही तुमचे क्रेडेन्शियल्स येथे टाका)
+         * Firebase चालू करण्यासाठी हे अनकमेंट करा आणि तुमची माहिती भरा.
+         */
+        /*
+        const firebaseConfig = {
+            apiKey: "AIzaSyB2fd1RdEq6NghpKR3uzYfmyJg2N7Uu8q4",
+            authDomain: "kumarofficialtm.firebaseapp.com",
+            databaseURL: "https://kumarofficialtm-default-rtdb.firebaseio.com",
+            projectId: "kumarofficialtm",
+            storageBucket: "kumarofficialtm.firebasestorage.app",
+            messagingSenderId: "746982907771",
+            appId: "1:746982907771:web:548c3f76e6c4aedef367de"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        */
 
-        let board = ["", "", "", "", "", "", "", "", ""];
-        let currentPlayer = "X";
-        let running = false;
-        let scoreX = 0;
-        let scoreO = 0;
+        // --- LOCAL MOCK DATABASE (For testing without Firebase) ---
+        let mockDB = {
+            users: {
+                "admin123": { name: "Admin Boss", pass: "adminpass", coins: 9999, isBanned: false, isAdmin: true, profilePic: "" }
+            },
+            settings: { oxReward: 50, dotsReward: 100, memoryReward: 80 }
+        };
 
-        // जिंकण्याच्या अटी (Winning Patterns)
-        const winConditions = [
-            [0, 1, 2], [3, 4, 5], [6, 7, 8], // आडवे
-            [0, 3, 6], [1, 4, 7], [2, 5, 8], // उभे
-            [0, 4, 8], [2, 4, 6]             // तिरपे
-        ];
+        // Current Session State
+        let currentUser = null;
+        let currentTgId = null;
+        let tempRegData = null; // Holds data during OTP phase
+        let generatedOTP = null;
 
-        initializeGame();
-
-        function initializeGame() {
-            cells.forEach(cell => cell.addEventListener('click', cellClicked));
-            resetBtn.addEventListener('click', restartGame);
-            statusText.textContent = `${currentPlayer}'s Turn`;
-            running = true;
+        // --- UI Navigation ---
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+            document.getElementById(screenId).classList.add('active-screen');
         }
 
-        function cellClicked() {
-            const cellIndex = this.getAttribute('data-index');
+        // --- App Initialization (Splash Screen) ---
+        setTimeout(() => {
+            // Check if user is already logged in (Local Storage)
+            const savedId = localStorage.getItem("loggedInUser");
+            if (savedId && mockDB.users[savedId]) {
+                currentTgId = savedId;
+                currentUser = mockDB.users[savedId];
+                updateDashboard();
+                switchScreen('screen-dashboard');
+            } else {
+                switchScreen('screen-login');
+            }
+        }, 2000);
 
-            if (board[cellIndex] !== "" || !running) {
+        // --- AUTHENTICATION: REGISTER & OTP ---
+        function initiateRegistration() {
+            const name = document.getElementById('reg-name').value;
+            const tgId = document.getElementById('reg-tg-id').value;
+            const pass = document.getElementById('reg-pass').value;
+
+            if (!name || !tgId || !pass) return alert("Please fill all fields!");
+
+            // Check if user already exists
+            // (In Firebase: db.ref('users/' + tgId).once('value').then(...))
+            if (mockDB.users[tgId]) {
+                alert("Account with this Telegram ID already exists! Please Login.");
                 return;
             }
 
-            updateCell(this, cellIndex);
-            checkWinner();
+            tempRegData = { name, tgId, pass, coins: 0, isBanned: false, isAdmin: false, profilePic: "" };
+            
+            // GENERATE OTP & SEND TO TELEGRAM BOT
+            generatedOTP = Math.floor(1000 + Math.random() * 9000).toString();
+            
+            /* 
+             * SERVER CALL COMMENT (तुम्ही हा API कॉल तुमच्या Backend ला करा)
+             * fetch(`https://your-api.com/sendOTP?tgId=${tgId}&otp=${generatedOTP}`)
+             */
+            console.log(`[SYSTEM] OTP for ${tgId} is: ${generatedOTP}`); // For testing
+            alert(`OTP sent to Telegram! (Check console for testing: ${generatedOTP})`);
+            
+            switchScreen('screen-otp');
         }
 
-        function updateCell(cell, index) {
-            board[index] = currentPlayer;
-            cell.textContent = currentPlayer;
+        function verifyOtpAndCreateAccount() {
+            const userOtp = document.getElementById('otp-input').value;
             
-            // स्टाईल अप्लाय करण्यासाठी Class जोडणे
-            cell.classList.add(currentPlayer.toLowerCase());
-            
-            // क्लिक केल्यावर लहानसा बाऊन्स इफेक्ट
-            cell.style.transform = "scale(0.8)";
-            setTimeout(() => {
-                cell.style.transform = "scale(1)";
-            }, 100);
-        }
-
-        function changePlayer() {
-            currentPlayer = (currentPlayer === "X") ? "O" : "X";
-            statusText.textContent = `${currentPlayer}'s Turn`;
-            
-            // खेळाडूप्रमाणे स्टेटसचा रंग बदलणे
-            if(currentPlayer === "X"){
-                statusText.style.color = "#00ffcc";
+            if (userOtp === generatedOTP || userOtp === "1111") { // 1111 as universal bypass for testing
+                // Save to DB
+                // (In Firebase: db.ref('users/' + tempRegData.tgId).set(tempRegData))
+                mockDB.users[tempRegData.tgId] = tempRegData;
+                alert("Account Created Successfully!");
+                switchScreen('screen-login');
+                tempRegData = null;
             } else {
-                statusText.style.color = "#ff007f";
+                alert("Invalid OTP! Any random number will NOT work.");
             }
         }
 
-        function checkWinner() {
-            let roundWon = false;
+        // --- AUTHENTICATION: LOGIN ---
+        function loginUser() {
+            const tgId = document.getElementById('login-tg-id').value;
+            const pass = document.getElementById('login-pass').value;
 
-            for (let i = 0; i < winConditions.length; i++) {
-                const condition = winConditions[i];
-                const cellA = board[condition[0]];
-                const cellB = board[condition[1]];
-                const cellC = board[condition[2]];
+            // (In Firebase: db.ref('users/' + tgId).once(...))
+            const user = mockDB.users[tgId];
 
-                if (cellA === "" || cellB === "" || cellC === "") {
-                    continue;
+            if (!user) {
+                alert("User not found!");
+            } else if (user.isBanned) {
+                alert("Your account has been BANNED by the Admin.");
+            } else if (user.pass !== pass) {
+                alert("Incorrect Password!");
+            } else {
+                currentTgId = tgId;
+                currentUser = user;
+                localStorage.setItem("loggedInUser", tgId);
+                updateDashboard();
+                switchScreen('screen-dashboard');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem("loggedInUser");
+            currentUser = null;
+            currentTgId = null;
+            switchScreen('screen-login');
+        }
+
+        // --- DASHBOARD FUNCTIONS ---
+        function updateDashboard() {
+            document.getElementById('dash-name').innerText = currentUser.name;
+            document.getElementById('dash-coins').innerText = currentUser.coins;
+            
+            if (currentUser.profilePic) {
+                document.getElementById('display-pic').style.backgroundImage = `url(${currentUser.profilePic})`;
+            }
+
+            if (currentUser.isAdmin) {
+                document.getElementById('admin-btn').style.display = "block";
+            } else {
+                document.getElementById('admin-btn').style.display = "none";
+            }
+        }
+
+        function updateProfilePic(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imgUrl = e.target.result;
+                    document.getElementById('display-pic').style.backgroundImage = `url(${imgUrl})`;
+                    currentUser.profilePic = imgUrl;
+                    // (In Firebase: db.ref('users/' + currentTgId).update({profilePic: imgUrl}))
                 }
-                if (cellA === cellB && cellB === cellC) {
-                    roundWon = true;
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // --- LEADERBOARD LOGIC ---
+        function loadLeaderboard() {
+            const listContainer = document.getElementById('leaderboard-list');
+            listContainer.innerHTML = '';
+
+            // Sort users by coins
+            let usersArray = Object.keys(mockDB.users).map(id => {
+                return { id: id, ...mockDB.users[id] };
+            });
+            usersArray.sort((a, b) => b.coins - a.coins);
+
+            usersArray.forEach((u, index) => {
+                let badge = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : "🎮";
+                listContainer.innerHTML += `
+                    <div class="list-item">
+                        <div>${badge} <b>${u.name}</b> <small>(${u.id})</small></div>
+                        <div style="color: gold;">🪙 ${u.coins}</div>
+                    </div>
+                `;
+            });
+
+            switchScreen('screen-leaderboard');
+        }
+
+        // --- ADMIN PANEL LOGIC ---
+        function checkAdmin() {
+            if (currentUser.isAdmin) {
+                document.getElementById('admin-ox-reward').value = mockDB.settings.oxReward;
+                switchScreen('screen-admin');
+            }
+        }
+
+        function saveAdminSettings() {
+            const newOxReward = parseInt(document.getElementById('admin-ox-reward').value);
+            mockDB.settings.oxReward = newOxReward;
+            alert("Settings Updated!");
+        }
+
+        function modifyCoins(isAdding) {
+            const targetId = document.getElementById('admin-target-tg').value;
+            const amount = parseInt(document.getElementById('admin-coin-amount').value);
+            
+            if (!mockDB.users[targetId]) return alert("Target user not found!");
+            
+            if (isAdding) {
+                mockDB.users[targetId].coins += amount;
+                alert(`Added ${amount} coins to ${targetId}`);
+            } else {
+                mockDB.users[targetId].coins -= amount;
+                if(mockDB.users[targetId].coins < 0) mockDB.users[targetId].coins = 0;
+                alert(`Removed ${amount} coins from ${targetId}`);
+            }
+            
+            // If admin modifies themselves
+            if(targetId === currentTgId) {
+                currentUser.coins = mockDB.users[targetId].coins;
+                updateDashboard();
+            }
+        }
+
+        function banUser() {
+            const targetId = document.getElementById('admin-target-tg').value;
+            if (!mockDB.users[targetId]) return alert("Target user not found!");
+            
+            mockDB.users[targetId].isBanned = !mockDB.users[targetId].isBanned;
+            let status = mockDB.users[targetId].isBanned ? "BANNED" : "UNBANNED";
+            alert(`User ${targetId} is now ${status}.`);
+        }
+
+        // --- GAMES: TIC-TAC-TOE (AI vs User) ---
+        let oxBoard = ["", "", "", "", "", "", "", "", ""];
+        let isUserTurn = true;
+        let oxRunning = false;
+
+        function startOXGame() {
+            document.getElementById('ox-reward').innerText = mockDB.settings.oxReward;
+            const boardDiv = document.getElementById('ox-board');
+            boardDiv.innerHTML = '';
+            oxBoard = ["", "", "", "", "", "", "", "", ""];
+            
+            for(let i=0; i<9; i++) {
+                let cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.setAttribute('data-index', i);
+                cell.addEventListener('click', handleOxClick);
+                boardDiv.appendChild(cell);
+            }
+            
+            document.getElementById('ox-status').innerText = "Your Turn (X)";
+            document.getElementById('ox-status').style.color = "var(--primary)";
+            oxRunning = true;
+            isUserTurn = true;
+            switchScreen('screen-game-ox');
+        }
+
+        function handleOxClick(e) {
+            let index = e.target.getAttribute('data-index');
+            if (oxBoard[index] !== "" || !oxRunning || !isUserTurn) return;
+
+            updateOxCell(e.target, index, "X");
+            checkOxWinner();
+
+            if (oxRunning) {
+                isUserTurn = false;
+                document.getElementById('ox-status').innerText = "Bot is thinking...";
+                document.getElementById('ox-status').style.color = "var(--secondary)";
+                setTimeout(botOxMove, 800);
+            }
+        }
+
+        function botOxMove() {
+            if (!oxRunning) return;
+            let empty = [];
+            oxBoard.forEach((val, idx) => { if (val === "") empty.push(idx); });
+            
+            if (empty.length > 0) {
+                let r = Math.floor(Math.random() * empty.length);
+                let botChoice = empty[r];
+                let cell = document.querySelector(`.cell[data-index="${botChoice}"]`);
+                updateOxCell(cell, botChoice, "O");
+                checkOxWinner();
+            }
+            
+            if (oxRunning) {
+                isUserTurn = true;
+                document.getElementById('ox-status').innerText = "Your Turn (X)";
+                document.getElementById('ox-status').style.color = "var(--primary)";
+            }
+        }
+
+        function updateOxCell(cell, index, player) {
+            oxBoard[index] = player;
+            cell.innerText = player;
+            cell.classList.add(player.toLowerCase());
+        }
+
+        function checkOxWinner() {
+            const winPaths = [
+                [0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]
+            ];
+            
+            let won = false;
+            for(let path of winPaths) {
+                let [a, b, c] = path;
+                if (oxBoard[a] && oxBoard[a] === oxBoard[b] && oxBoard[a] === oxBoard[c]) {
+                    won = true;
                     break;
                 }
             }
 
-            if (roundWon) {
-                statusText.textContent = `${currentPlayer} Wins! 🎉`;
-                statusText.style.color = "white";
-                updateScore();
-                running = false;
-            } else if (!board.includes("")) {
-                statusText.textContent = "Draw! 🤝";
-                statusText.style.color = "white";
-                running = false;
-            } else {
-                changePlayer();
+            if (won) {
+                oxRunning = false;
+                if (!isUserTurn) { // User just played (X won)
+                    document.getElementById('ox-status').innerText = "🎉 YOU WON!";
+                    let reward = mockDB.settings.oxReward;
+                    currentUser.coins += reward;
+                    // (In Firebase: update coins in db)
+                    updateDashboard();
+                    setTimeout(() => alert(`You won ${reward} coins!`), 500);
+                } else { // Bot won
+                    document.getElementById('ox-status').innerText = "🤖 BOT WINS!";
+                }
+            } else if (!oxBoard.includes("")) {
+                oxRunning = false;
+                document.getElementById('ox-status').innerText = "🤝 DRAW!";
             }
         }
 
-        function updateScore() {
-            if(currentPlayer === "X") {
-                scoreX++;
-                scoreXText.textContent = scoreX;
-            } else {
-                scoreO++;
-                scoreOText.textContent = scoreO;
-            }
-        }
-
-        function restartGame() {
-            currentPlayer = "X";
-            board = ["", "", "", "", "", "", "", "", ""];
-            statusText.textContent = `${currentPlayer}'s Turn`;
-            statusText.style.color = "#00ffcc";
-            
-            // बोर्ड साफ करणे
-            cells.forEach(cell => {
-                cell.textContent = "";
-                cell.classList.remove('x', 'o');
-            });
-            running = true;
-        }
     </script>
 </body>
 </html>
-
