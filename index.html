@@ -2,143 +2,299 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catch The Thief</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Racer Pro</title>
     <style>
-        body { 
-            background: #111; 
-            color: white; 
-            text-align: center; 
-            font-family: Arial, sans-serif; 
-            margin-top: 30px; 
-            user-select: none;
+        /* =========================================
+           1. BASIC SETUP & FONTS
+           ========================================= */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;900&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Orbitron', sans-serif; user-select: none; }
+        body { background: #000; color: #fff; overflow: hidden; height: 100vh; width: 100vw; display: flex; justify-content: center; }
+
+        /* =========================================
+           2. 10-SECOND STARTUP SCREEN (LOADING)
+           ========================================= */
+        #splash-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, #1a0033 0%, #000000 100%);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999;
         }
-        h1 { color: #ffcc00; letter-spacing: 2px; }
-        #score-board { 
-            font-size: 24px; 
-            color: #00ff00; 
-            font-weight: bold; 
-            margin-bottom: 20px; 
+        .studio-logo { font-size: 35px; font-weight: 900; color: #00ffff; text-shadow: 0 0 20px #00ffff; letter-spacing: 5px; animation: pulse 1.5s infinite; text-align: center;}
+        .studio-logo span { color: #ff00ff; text-shadow: 0 0 20px #ff00ff; }
+        
+        .loading-box { width: 250px; margin-top: 50px; text-align: center; }
+        .loading-text { font-size: 12px; color: #00ffff; margin-bottom: 10px; letter-spacing: 2px; }
+        .progress-bar { width: 100%; height: 10px; background: #222; border-radius: 5px; overflow: hidden; border: 1px solid #00ffff; }
+        .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #00ffff, #ff00ff); animation: loadBar 10s linear forwards; }
+
+        @keyframes loadBar { 0% { width: 0%; } 100% { width: 100%; } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        /* =========================================
+           3. MAIN GAME UI & ROAD
+           ========================================= */
+        #game-container { position: relative; width: 100%; max-width: 400px; height: 100%; background: #111; overflow: hidden; display: none; }
+        
+        .road {
+            position: absolute; top: -100vh; left: 0; width: 100%; height: 200vh;
+            background: #222; border-left: 5px solid #ff00ff; border-right: 5px solid #ff00ff;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
         }
-        #grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 100px); 
-            gap: 15px; 
-            justify-content: center; 
-            margin-top: 20px; 
-        }
-        .hole { 
-            width: 100px; 
-            height: 100px; 
-            background: #222; 
-            border-radius: 15px; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            font-size: 55px; 
-            cursor: pointer; 
-            border: 3px solid #444; 
-            transition: 0.1s;
-        }
-        .hole:active { 
-            background: #555; 
-            transform: scale(0.9); 
-        }
-        .btn {
-            background: #ff0055;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 10px;
-            margin-top: 30px;
-            cursor: pointer;
-        }
+        /* Moving road lines */
+        .lines { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 10px; height: 100%; background: repeating-linear-gradient(to bottom, transparent 0%, transparent 50%, #00ffff 50%, #00ffff 100%); background-size: 100% 150px; }
+
+        /* Score Board */
+        #score-board { position: absolute; top: 20px; left: 20px; z-index: 100; background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 10px; border: 2px solid #00ffff; font-size: 18px; color: #fff; text-shadow: 0 0 10px #00ffff; }
+
+        /* Start / Game Over Screen */
+        .menu-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 200; text-align: center; }
+        .menu-title { font-size: 40px; color: #ff00ff; text-shadow: 0 0 20px #ff00ff; margin-bottom: 30px; }
+        .play-btn { background: linear-gradient(45deg, #00ffff, #ff00ff); color: #000; border: none; padding: 15px 40px; font-size: 20px; font-weight: 900; border-radius: 30px; cursor: pointer; box-shadow: 0 0 20px rgba(255,0,255,0.6); transition: 0.2s; }
+        .play-btn:active { transform: scale(0.9); }
+
+        /* =========================================
+           4. CARS (Player & Enemies)
+           ========================================= */
+        .car { position: absolute; width: 50px; height: 90px; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 40px; z-index: 50; }
+        #player { bottom: 30px; left: 175px; background: rgba(0,255,255,0.2); box-shadow: 0 0 20px #00ffff, inset 0 0 10px #00ffff; border: 1px solid #00ffff; transition: left 0.1s; }
+        .enemy { background: rgba(255,0,0,0.2); box-shadow: 0 0 20px #ff0055, inset 0 0 10px #ff0055; border: 1px solid #ff0055; }
+
+        /* Mobile Touch Controls Overlay */
+        #controls { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; z-index: 90; }
+        .touch-zone { flex: 1; height: 100%; }
+        
     </style>
 </head>
 <body>
 
-    <h1>👮 CATCH THE THIEF!</h1>
-    <div id="score-board">Score: <span id="score">0</span></div>
-
-    <div id="grid">
-        <div class="hole" onclick="hit(0)" id="hole-0"></div>
-        <div class="hole" onclick="hit(1)" id="hole-1"></div>
-        <div class="hole" onclick="hit(2)" id="hole-2"></div>
-        <div class="hole" onclick="hit(3)" id="hole-3"></div>
-        <div class="hole" onclick="hit(4)" id="hole-4"></div>
-        <div class="hole" onclick="hit(5)" id="hole-5"></div>
-        <div class="hole" onclick="hit(6)" id="hole-6"></div>
-        <div class="hole" onclick="hit(7)" id="hole-7"></div>
-        <div class="hole" onclick="hit(8)" id="hole-8"></div>
+    <!-- 1. STARTUP LOADING SCREEN (10 SECONDS) -->
+    <div id="splash-screen">
+        <div class="studio-logo">KUMAR<br><span>STUDIOS</span></div>
+        <div class="loading-box">
+            <div class="loading-text" id="load-text">INITIALIZING ENGINE...</div>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
     </div>
 
-    <button class="btn" onclick="startGame()">🔄 RESTART GAME</button>
+    <!-- 2. MAIN GAME AREA -->
+    <div id="game-container">
+        
+        <!-- Background Road -->
+        <div class="road" id="road">
+            <div class="lines" id="lines"></div>
+        </div>
 
+        <!-- UI -->
+        <div id="score-board">SCORE: <span id="score">0</span></div>
+
+        <!-- Touch Controls -->
+        <div id="controls">
+            <div class="touch-zone" onmousedown="moveLeft()" ontouchstart="moveLeft()"></div>
+            <div class="touch-zone" onmousedown="moveRight()" ontouchstart="moveRight()"></div>
+        </div>
+
+        <!-- Player Car -->
+        <div class="car" id="player">🚘</div>
+
+        <!-- Menus -->
+        <div class="menu-screen" id="start-menu">
+            <h1 class="menu-title">NEON<br>RACER</h1>
+            <p style="margin-bottom: 20px; color:#aaa;">Tap Left/Right side of screen to steer!</p>
+            <button class="play-btn" onclick="startGame()">START RACE</button>
+        </div>
+
+        <div class="menu-screen" id="game-over" style="display: none;">
+            <h1 class="menu-title" style="color: #ff0055; text-shadow: 0 0 20px #ff0055;">CRASHED!</h1>
+            <p style="margin-bottom: 10px; color:#fff; font-size:20px;">Final Score: <span id="final-score" style="color:#00ffff; font-weight:bold;">0</span></p>
+            <button class="play-btn" onclick="resetGame()" style="margin-top: 20px;">PLAY AGAIN</button>
+        </div>
+
+    </div>
+
+    <!-- =========================================
+         5. GAME LOGIC (JAVASCRIPT)
+         ========================================= */
     <script>
+        // --- 10 Second Startup Logic ---
+        const loadTexts = [
+            "INITIALIZING ENGINE...",
+            "LOADING 3D GRAPHICS...",
+            "CONNECTING TO SERVERS...",
+            "PREPARING NEON TRACKS...",
+            "SYSTEM READY!"
+        ];
+        
+        let textIndex = 0;
+        const textElement = document.getElementById('load-text');
+        
+        // Change text every 2 seconds
+        const textInterval = setInterval(() => {
+            textIndex++;
+            if(textIndex < loadTexts.length) {
+                textElement.innerText = loadTexts[textIndex];
+            }
+        }, 2000);
+
+        // After exactly 10 seconds (10000 ms), hide splash and show game
+        setTimeout(() => {
+            clearInterval(textInterval);
+            document.getElementById('splash-screen').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+        }, 10000);
+
+        // --- Game Engine Variables ---
+        const player = document.getElementById('player');
+        const gameContainer = document.getElementById('game-container');
+        const road = document.getElementById('road');
+        const lines = document.getElementById('lines');
+        const scoreElement = document.getElementById('score');
+        
+        let isGameRunning = false;
         let score = 0;
-        let currentThief = -1;
-        let currentBomb = -1;
-        let gameInterval;
-        let gameSpeed = 1000; // 1 second
+        let speed = 5;
+        let playerX = 175; // Initial X position (center)
+        let animationFrame;
+        let roadPos = 0;
+        
+        // Car movement boundaries
+        const minX = 10;
+        const maxX = window.innerWidth > 400 ? 340 : window.innerWidth - 60; 
 
+        const enemies = [];
+        const enemyEmojis = ['🚙', '🚕', '🚓', '🏎️'];
+
+        // --- Player Controls ---
+        function moveLeft() {
+            if(!isGameRunning) return;
+            playerX -= 30; // Move 30px left
+            if(playerX < minX) playerX = minX;
+            player.style.left = playerX + 'px';
+        }
+
+        function moveRight() {
+            if(!isGameRunning) return;
+            playerX += 30; // Move 30px right
+            if(playerX > maxX) playerX = maxX;
+            player.style.left = playerX + 'px';
+        }
+
+        // Keyboard support for PC
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') moveLeft();
+            if (e.key === 'ArrowRight') moveRight();
+        });
+
+        // --- Enemy Spawning ---
+        function createEnemy() {
+            if(!isGameRunning) return;
+            
+            let enemy = document.createElement('div');
+            enemy.className = 'car enemy';
+            enemy.innerText = enemyEmojis[Math.floor(Math.random() * enemyEmojis.length)];
+            
+            // Random X position on the road
+            let randomX = Math.floor(Math.random() * (maxX - minX + 1)) + minX;
+            enemy.style.left = randomX + 'px';
+            enemy.style.top = '-100px'; // Start above screen
+            
+            gameContainer.appendChild(enemy);
+            enemies.push(enemy);
+
+            // Spawn next enemy randomly between 1 to 2 seconds
+            let nextSpawnTime = Math.random() * 1000 + 1000 - (speed * 20); 
+            if(nextSpawnTime < 500) nextSpawnTime = 500;
+            setTimeout(createEnemy, nextSpawnTime);
+        }
+
+        // --- Main Game Loop ---
+        function gameLoop() {
+            if(!isGameRunning) return;
+
+            // 1. Animate Road (gives illusion of speed)
+            roadPos += speed;
+            if(roadPos > 150) roadPos = 0;
+            lines.style.backgroundPosition = `0 ${roadPos}px`;
+
+            // 2. Increase Score & Speed
+            score += 1;
+            scoreElement.innerText = Math.floor(score / 10);
+            if(score % 500 === 0) speed += 0.5; // Speed up over time
+
+            // 3. Move Enemies and Check Collision
+            let playerRect = player.getBoundingClientRect();
+
+            for(let i = 0; i < enemies.length; i++) {
+                let enemy = enemies[i];
+                let currentTop = parseInt(enemy.style.top.replace('px', ''));
+                
+                // Move enemy down
+                enemy.style.top = (currentTop + speed) + 'px';
+
+                // Check Collision (AABB)
+                let enemyRect = enemy.getBoundingClientRect();
+                
+                // Shrink hitbox slightly for fairer gameplay
+                let hitBuffer = 10; 
+                if (
+                    playerRect.left + hitBuffer < enemyRect.right - hitBuffer &&
+                    playerRect.right - hitBuffer > enemyRect.left + hitBuffer &&
+                    playerRect.top + hitBuffer < enemyRect.bottom - hitBuffer &&
+                    playerRect.bottom - hitBuffer > enemyRect.top + hitBuffer
+                ) {
+                    gameOver();
+                }
+
+                // Remove enemy if it goes off screen
+                if(currentTop > window.innerHeight) {
+                    enemy.remove();
+                    enemies.splice(i, 1);
+                    i--;
+                }
+            }
+
+            animationFrame = requestAnimationFrame(gameLoop);
+        }
+
+        // --- Game Flow ---
         function startGame() {
+            document.getElementById('start-menu').style.display = 'none';
+            isGameRunning = true;
             score = 0;
-            gameSpeed = 1000;
-            document.getElementById('score').innerText = score;
-            clearInterval(gameInterval);
-            gameInterval = setInterval(randomize, gameSpeed);
+            speed = 5;
+            playerX = (gameContainer.offsetWidth / 2) - 25; // Center car
+            player.style.left = playerX + 'px';
+            
+            gameLoop();
+            setTimeout(createEnemy, 1000);
         }
 
-        function randomize() {
-            // सर्व बॉक्सेस रिकामे करणे
-            for (let i = 0; i < 9; i++) {
-                document.getElementById('hole-' + i).innerText = "";
-            }
+        function gameOver() {
+            isGameRunning = false;
+            cancelAnimationFrame(animationFrame);
+            
+            // Screen Shake Effect
+            gameContainer.style.transform = 'rotate(3deg) scale(1.05)';
+            setTimeout(() => { gameContainer.style.transform = 'none'; }, 200);
 
-            // चोर आणि बॉम्बसाठी रँडम जागा निवडणे
-            currentThief = Math.floor(Math.random() * 9);
-            currentBomb = Math.floor(Math.random() * 9);
-
-            // दोघे एकाच जागी येऊ नयेत म्हणून चेक करणे
-            if (currentThief === currentBomb) {
-                currentBomb = (currentBomb + 1) % 9;
-            }
-
-            // स्क्रीनवर दाखवणे
-            document.getElementById('hole-' + currentThief).innerText = "👺";
-            document.getElementById('hole-' + currentBomb).innerText = "💣";
+            document.getElementById('game-over').style.display = 'flex';
+            document.getElementById('final-score').innerText = Math.floor(score / 10);
         }
 
-        function hit(index) {
-            if (index === currentThief) {
-                score += 10;
-                document.getElementById('score').innerText = score;
-                document.getElementById('hole-' + index).innerText = "💥"; // मारल्याचा इफेक्ट
-                currentThief = -1; // डबल क्लिक टाळण्यासाठी
-                
-                // स्कोर वाढेल तसा गेम फास्ट होईल
-                if (score % 50 === 0 && gameSpeed > 400) {
-                    gameSpeed -= 100;
-                    clearInterval(gameInterval);
-                    gameInterval = setInterval(randomize, gameSpeed);
-                }
-            } 
-            else if (index === currentBomb) {
-                clearInterval(gameInterval);
-                alert("💥 BOOM! गेम ओव्हर!\nतुझा फायनल स्कोर आहे: " + score);
-                
-                // सगळे बॉक्सेस रिकामे करणे
-                for (let i = 0; i < 9; i++) {
-                    document.getElementById('hole-' + i).innerText = "";
-                }
-            }
+        function resetGame() {
+            // Clear all enemies from screen and array
+            enemies.forEach(enemy => enemy.remove());
+            enemies.length = 0;
+            
+            document.getElementById('game-over').style.display = 'none';
+            startGame();
         }
 
-        // गेम सुरु करणे
-        startGame();
     </script>
 </body>
 </html>
-
+    
